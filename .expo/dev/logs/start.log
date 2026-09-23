@@ -1,0 +1,57 @@
+{"_e":"root:init","_t":1790181600540,"format":"v0-jsonl","version":"57.0.26"}
+{"_e":"env:mode","_t":1790181600541,"nodeEnv":"development","babelEnv":"development","mode":"development"}
+{"_e":"env:load","_t":1790181600542,"mode":"development","files":["../../../.env"],"env":{"EXPO_PUBLIC_SUPABASE_ANON_KEY":"sb_publishable_9GWfc491Pd5byk4vIs6pAQ_X026uzF1","EXPO_PUBLIC_SUPABASE_URL":"https://scrdrxrhscbueoazkapm.supabase.co/rest/v1/"}}
+{"_e":"root:init","_t":1790181617726,"format":"v0-jsonl","version":"57.0.26"}
+{"_e":"env:mode","_t":1790181617726,"nodeEnv":"development","babelEnv":"development","mode":"development"}
+{"_e":"env:load","_t":1790181617727,"mode":"development","files":["../../../.env"],"env":{"EXPO_PUBLIC_SUPABASE_ANON_KEY":"sb_publishable_9GWfc491Pd5byk4vIs6pAQ_X026uzF1","EXPO_PUBLIC_SUPABASE_URL":"https://scrdrxrhscbueoazkapm.supabase.co/rest/v1/"}}
+{"_e":"devserver:start","_t":1790181618073,"mode":"development","web":true,"baseUrl":"","asyncRoutes":false,"routerRoot":"../../../app","serverComponents":false,"serverActions":false,"serverRendering":false,"apiRoutes":false,"exporting":false}
+{"_e":"metro:config","_t":1790181618232,"serverRoot":"../../..","projectRoot":"../../..","exporting":false,"flags":{"autolinkingModuleResolution":false,"serverActions":false,"serverComponents":false,"reactCompiler":false,"optimizeGraph":false,"treeshaking":false,"logbox":false}}
+{"_e":"expo:dev-tools-plugin:load","_t":1790181618309,"plugins":[]}
+{"_e":"metro:instantiate","_t":1790181618455,"atlas":false,"workers":7,"host":"::","port":8082}
+{"_e":"root:init","_t":1790181786011,"format":"v0-jsonl","version":"57.0.26"}
+{"_e":"env:mode","_t":1790181786011,"nodeEnv":"development","babelEnv":"development","mode":"development"}
+{"_e":"env:load","_t":1790181786012,"mode":"development","files":["../../../.env"],"env":{"EXPO_PUBLIC_SUPABASE_ANON_KEY":"sb_publishable_9GWfc491Pd5byk4vIs6pAQ_X026uzF1","EXPO_PUBLIC_SUPABASE_URL":"https://scrdrxrhscbueoazkapm.supabase.co/rest/v1/"}}
+{"_e":"root:init","_t":1790181810781,"format":"v0-jsonl","version":"57.0.26"}
+{"_e":"env:mode","_t":1790181810781,"nodeEnv":"development","babelEnv":"development","mode":"development"}
+{"_e":"env:load","_t":1790181810782,"mode":"development","files":["../../../.env"],"env":{"EXPO_PUBLIC_SUPABASE_ANON_KEY":"sb_publishable_9GWfc491Pd5byk4vIs6pAQ_X026uzF1","EXPO_PUBLIC_SUPABASE_URL":"https://scrdrxrhscbueoazkapm.supabase.co/rest/v1/"}}
+{"_e":"root:init","_t":1790181842616,"format":"v0-jsonl","version":"57.0.26"}
+{"_e":"env:mode","_t":1790181842616,"nodeEnv":"development","babelEnv":"development","mode":"development"}
+{"_e":"env:load","_t":1790181842619,"mode":"development","files":["../../../.env"],"env":{"EXPO_PUBLIC_SUPABASE_ANON_KEY":"sb_publishable_9GWfc491Pd5byk4vIs6pAQ_X026uzF1","EXPO_PUBLIC_SUPABASE_URL":"https://scrdrxrhscbueoazkapm.supabase.co/rest/v1/"}}
+{"_e":"root:init","_t":1790190698390,"format":"v0-jsonl","version":"57.0.26"}
+{"_e":"env:mode","_t":1790190698390,"nodeEnv":"development","babelEnv":"development","mode":"development"}
+{"_e":"env:load","_t":1790190698392,"mode":"development","files":["../../../.env"],"env":{"EXPO_PUBLIC_SUPABASE_ANON_KEY":"sb_publishable_9GWfc491Pd5byk4vIs6pAQ_X026uzF1","EXPO_PUBLIC_SUPABASE_URL":"https://scrdrxrhscbueoazkapm.supabase.co/rest/v1/"}}
+{"_e":"devserver:start","_t":1790190698849,"mode":"development","web":true,"baseUrl":"","asyncRoutes":false,"routerRoot":"../../../src/app","serverComponents":false,"serverActions":false,"serverRendering":false,"apiRoutes":false,"exporting":false}
+{"_e":"metro:config","_t":1790190699035,"serverRoot":"../../..","projectRoot":"../../..","exporting":false,"flags":{"autolinkingModuleResolution":false,"serverActions":false,"serverComponents":false,"reactCompiler":false,"optimizeGraph":false,"treeshaking":false,"logbox":false}}
+{"_e":"expo:dev-tools-plugin:load","_t":1790190699168,"plugins":[]}
+{"_e":"metro:instantiate","_t":1790190699230,"atlas":false,"workers":7,"host":"::","port":8081}
+{"_e":"root:init","_t":1790190729246,"format":"v0-jsonl","version":"57.0.26"}
+{"_e":"env:mode","_t":1790190729247,"nodeEnv":"development","babelEnv":"development","mode":"development"}
+{"_e":"env:load","_t":1790190729248,"mode":"development","files":["../../../.env"],"env":{"EXPO_PUBLIC_SUPABASE_ANON_KEY":"sb_publishable_9GWfc491Pd5byk4vIs6pAQ_X026uzF1","EXPO_PUBLIC_SUPABASE_URL":"https://scrdrxrhscbueoazkapm.supabase.co/rest/v1/"}}
+{"_e":"devserver:start","_t":1790190729635,"mode":"development","web":true,"baseUrl":"","asyncRoutes":false,"routerRoot":"../../../src/app","serverComponents":false,"serverActions":false,"serverRendering":false,"apiRoutes":false,"exporting":false}
+{"_e":"metro:config","_t":1790190729782,"serverRoot":"../../..","projectRoot":"../../..","exporting":false,"flags":{"autolinkingModuleResolution":false,"serverActions":false,"serverComponents":false,"reactCompiler":false,"optimizeGraph":false,"treeshaking":false,"logbox":false}}
+{"_e":"expo:dev-tools-plugin:load","_t":1790190729863,"plugins":[]}
+{"_e":"metro:instantiate","_t":1790190730067,"atlas":false,"workers":7,"host":"::","port":8081}
+{"_e":"metro:bundling:started","_t":1790190759623,"id":"1","platform":"web","environment":null,"entry":"node_modules/expo-router/entry.js"}
+{"_e":"metro:bundling:done","_t":1790190761693,"id":"1","total":874,"ms":2069.68225}
+{"_e":"metro:client_log","_t":1790190761811,"level":"info","data":["%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools","font-weight:bold"]}
+{"_e":"metro:client_log","_t":1790190761811,"level":"log","data":["Running application \"main\" with appParams:\n","{\"hydrate\": undefined, \"rootTag\": \"#root\"}","\nDevelopment-level warnings: ON.\nPerformance optimizations: OFF."]}
+{"_e":"metro:bundling:started","_t":1790190789139,"id":"3","platform":"web","environment":null,"entry":"node_modules/expo-router/entry.js"}
+{"_e":"metro:bundling:done","_t":1790190789168,"id":"3","total":1,"ms":27.98625}
+{"_e":"metro:client_log","_t":1790190789234,"level":"info","data":["%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools","font-weight:bold"]}
+{"_e":"metro:client_log","_t":1790190789234,"level":"log","data":["Running application \"main\" with appParams:\n","{\"hydrate\": undefined, \"rootTag\": \"#root\"}","\nDevelopment-level warnings: ON.\nPerformance optimizations: OFF."]}
+{"_e":"metro:bundling:started","_t":1790190814055,"id":"4","platform":"web","environment":null,"entry":"node_modules/expo-router/entry.js"}
+{"_e":"metro:bundling:done","_t":1790190814091,"id":"4","total":1,"ms":36.042208}
+{"_e":"metro:client_log","_t":1790190814220,"level":"info","data":["%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools","font-weight:bold"]}
+{"_e":"metro:client_log","_t":1790190814221,"level":"log","data":["Running application \"main\" with appParams:\n","{\"hydrate\": undefined, \"rootTag\": \"#root\"}","\nDevelopment-level warnings: ON.\nPerformance optimizations: OFF."]}
+{"_e":"metro:bundling:started","_t":1790190850661,"id":"5","platform":"web","environment":null,"entry":"node_modules/expo-router/entry.js"}
+{"_e":"metro:bundling:done","_t":1790190850685,"id":"5","total":1,"ms":23.405125}
+{"_e":"metro:client_log","_t":1790190850761,"level":"info","data":["%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools","font-weight:bold"]}
+{"_e":"metro:client_log","_t":1790190850762,"level":"log","data":["Running application \"main\" with appParams:\n","{\"hydrate\": undefined, \"rootTag\": \"#root\"}","\nDevelopment-level warnings: ON.\nPerformance optimizations: OFF."]}
+{"_e":"metro:bundling:started","_t":1790190864249,"id":"6","platform":"web","environment":null,"entry":"node_modules/expo-router/entry.js"}
+{"_e":"metro:bundling:done","_t":1790190864276,"id":"6","total":1,"ms":27.050917}
+{"_e":"metro:client_log","_t":1790190864344,"level":"info","data":["%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools","font-weight:bold"]}
+{"_e":"metro:client_log","_t":1790190864344,"level":"log","data":["Running application \"main\" with appParams:\n","{\"hydrate\": undefined, \"rootTag\": \"#root\"}","\nDevelopment-level warnings: ON.\nPerformance optimizations: OFF."]}
+{"_e":"metro:bundling:started","_t":1790190905529,"id":"8","platform":"web","environment":null,"entry":"node_modules/expo-router/entry.js"}
+{"_e":"metro:bundling:done","_t":1790190905548,"id":"8","total":1,"ms":18.19025}
+{"_e":"metro:client_log","_t":1790190905605,"level":"info","data":["%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools","font-weight:bold"]}
+{"_e":"metro:client_log","_t":1790190905606,"level":"log","data":["Running application \"main\" with appParams:\n","{\"hydrate\": undefined, \"rootTag\": \"#root\"}","\nDevelopment-level warnings: ON.\nPerformance optimizations: OFF."]}

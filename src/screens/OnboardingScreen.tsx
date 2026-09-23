@@ -33,11 +33,13 @@ const VIEWABILITY_CONFIG = { itemVisiblePercentThreshold: 50 };
 type SlideItemProps = {
   slide: Slide;
   width: number;
+  height: number;
 };
 
-const SlideItem = memo(function SlideItem({ slide, width }: SlideItemProps) {
+// Explicit height is needed because horizontal FlatList cells don't stretch vertically on web.
+const SlideItem = memo(function SlideItem({ slide, width, height }: SlideItemProps) {
   return (
-    <View style={[styles.slide, { width }]}>
+    <View style={[styles.slide, { width, height }]}>
       <Text style={styles.title} accessibilityRole="header">
         {slide.title}
       </Text>
@@ -83,7 +85,7 @@ function OnboardingButton({ label, onPress }: OnboardingButtonProps) {
 }
 
 export default function OnboardingScreen() {
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const listRef = useRef<FlatList<Slide>>(null);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -101,8 +103,8 @@ export default function OnboardingScreen() {
   ).current;
 
   const renderItem = useCallback<ListRenderItem<Slide>>(
-    ({ item }) => <SlideItem slide={item} width={width} />,
-    [width],
+    ({ item }) => <SlideItem slide={item} width={width} height={height} />,
+    [width, height],
   );
 
   const getItemLayout = useCallback(
@@ -156,7 +158,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
   },
   slide: {
-    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 32,
