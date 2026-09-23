@@ -9,12 +9,11 @@ import {
   type ListRenderItem,
   type ViewToken,
 } from 'react-native';
-import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/colors';
-import { markOnboardingComplete } from '@/services/onboarding';
+import { useOnboarding } from '@/context/OnboardingContext';
 
 type Slide = {
   id: string;
@@ -89,6 +88,7 @@ export default function OnboardingScreen() {
   const insets = useSafeAreaInsets();
   const listRef = useRef<FlatList<Slide>>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const { completeOnboarding } = useOnboarding();
 
   const isLastSlide = activeIndex === SLIDES.length - 1;
 
@@ -120,9 +120,10 @@ export default function OnboardingScreen() {
     listRef.current?.scrollToIndex({ index: activeIndex + 1, animated: true });
   };
 
-  const handleGetStarted = async () => {
-    await markOnboardingComplete();
-    router.replace('/login');
+  // Completing onboarding makes this route unavailable, so the root layout
+  // moves on to Login by itself.
+  const handleGetStarted = () => {
+    void completeOnboarding();
   };
 
   return (
