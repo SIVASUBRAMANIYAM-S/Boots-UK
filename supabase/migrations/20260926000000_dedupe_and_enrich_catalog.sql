@@ -1,33 +1,76 @@
--- Sample catalog data. Run in Supabase SQL Editor, or via `supabase db reset`
--- if using the CLI (seed.sql is applied automatically after migrations).
--- Guarded with NOT EXISTS so re-running this file is safe and won't create
--- duplicate categories/products.
+-- Cleans up duplicate categories/products created by re-running seed.sql,
+-- backfills image_url on the catalog, and adds a few more products per
+-- category so the Shop tab isn't only two items deep.
+-- Run in the Supabase SQL Editor (categories/products are read-only to the
+-- client, so this can't be applied from the app itself).
 
-INSERT INTO categories (name, image_url)
-SELECT 'Health & Wellness', 'https://placehold.co/800x400/e8f4fd/005eb8.png?text=Health+%26+Wellness'
-WHERE NOT EXISTS (SELECT 1 FROM categories WHERE name = 'Health & Wellness');
+-- 1) Categories: keep the earliest row per name, repoint any products that
+-- pointed at a duplicate, then remove the duplicates.
+UPDATE products p
+SET category_id = ranked.canonical_id
+FROM (
+  SELECT
+    id,
+    FIRST_VALUE(id) OVER (PARTITION BY name ORDER BY created_at, id) AS canonical_id
+  FROM categories
+) ranked
+WHERE p.category_id = ranked.id
+  AND ranked.id <> ranked.canonical_id;
 
-INSERT INTO categories (name, image_url)
-SELECT 'Beauty & Skincare', 'https://placehold.co/800x400/e8f4fd/005eb8.png?text=Beauty+%26+Skincare'
-WHERE NOT EXISTS (SELECT 1 FROM categories WHERE name = 'Beauty & Skincare');
+DELETE FROM categories c
+USING (
+  SELECT id, ROW_NUMBER() OVER (PARTITION BY name ORDER BY created_at, id) AS rn
+  FROM categories
+) ranked
+WHERE c.id = ranked.id AND ranked.rn > 1;
 
-INSERT INTO categories (name, image_url)
-SELECT 'Baby & Parenting', 'https://placehold.co/800x400/e8f4fd/005eb8.png?text=Baby+%26+Parenting'
-WHERE NOT EXISTS (SELECT 1 FROM categories WHERE name = 'Baby & Parenting');
+-- 2) Products: same idea, keyed on name + price. Repoint cart/order_items
+-- rows before deleting the duplicate product rows.
+UPDATE cart ca
+SET product_id = ranked.canonical_id
+FROM (
+  SELECT
+    id,
+    FIRST_VALUE(id) OVER (PARTITION BY name, price ORDER BY created_at, id) AS canonical_id
+  FROM products
+) ranked
+WHERE ca.product_id = ranked.id
+  AND ranked.id <> ranked.canonical_id;
 
--- Health & Wellness
-INSERT INTO products (name, description, price, category_id, stock_quantity, image_url)
-SELECT 'Vitamin C 1000mg', 'Immune support supplement', 8.99, id, 100,
-  'https://placehold.co/400x400/e8f4fd/005eb8.png?text=Vitamin+C+1000mg'
-FROM categories WHERE name = 'Health & Wellness'
-AND NOT EXISTS (SELECT 1 FROM products WHERE name = 'Vitamin C 1000mg');
+UPDATE order_items oi
+SET product_id = ranked.canonical_id
+FROM (
+  SELECT
+    id,
+    FIRST_VALUE(id) OVER (PARTITION BY name, price ORDER BY created_at, id) AS canonical_id
+  FROM products
+) ranked
+WHERE oi.product_id = ranked.id
+  AND ranked.id <> ranked.canonical_id;
 
-INSERT INTO products (name, description, price, category_id, stock_quantity, image_url)
-SELECT 'Omega 3 Fish Oil', 'Heart health supplement', 12.49, id, 80,
-  'https://placehold.co/400x400/e8f4fd/005eb8.png?text=Omega+3+Fish+Oil'
-FROM categories WHERE name = 'Health & Wellness'
-AND NOT EXISTS (SELECT 1 FROM products WHERE name = 'Omega 3 Fish Oil');
+DELETE FROM products p
+USING (
+  SELECT id, ROW_NUMBER() OVER (PARTITION BY name, price ORDER BY created_at, id) AS rn
+  FROM products
+) ranked
+WHERE p.id = ranked.id AND ranked.rn > 1;
 
+-- 3) Backfill category images.
+UPDATE categories SET image_url = 'https://placehold.co/800x400/e8f4fd/005eb8.png?text=Health+%26+Wellness' WHERE name = 'Health & Wellness';
+UPDATE categories SET image_url = 'https://placehold.co/800x400/e8f4fd/005eb8.png?text=Beauty+%26+Skincare' WHERE name = 'Beauty & Skincare';
+UPDATE categories SET image_url = 'https://placehold.co/800x400/e8f4fd/005eb8.png?text=Baby+%26+Parenting' WHERE name = 'Baby & Parenting';
+
+-- 4) Backfill images for the original 6 products.
+UPDATE products SET image_url = 'https://placehold.co/400x400/e8f4fd/005eb8.png?text=Vitamin+C+1000mg' WHERE name = 'Vitamin C 1000mg';
+UPDATE products SET image_url = 'https://placehold.co/400x400/e8f4fd/005eb8.png?text=Omega+3+Fish+Oil' WHERE name = 'Omega 3 Fish Oil';
+UPDATE products SET image_url = 'https://placehold.co/400x400/e8f4fd/005eb8.png?text=No7+Radiance+Serum' WHERE name = 'No7 Radiance Serum';
+UPDATE products SET image_url = 'https://placehold.co/400x400/e8f4fd/005eb8.png?text=Soap+%26+Glory+Lotion' WHERE name = 'Soap & Glory Body Lotion';
+UPDATE products SET image_url = 'https://placehold.co/400x400/e8f4fd/005eb8.png?text=Boots+Baby+Shampoo' WHERE name = 'Boots Baby Shampoo';
+UPDATE products SET image_url = 'https://placehold.co/400x400/e8f4fd/005eb8.png?text=Pampers+Nappies' WHERE name = 'Pampers Nappies Size 3';
+
+-- 5) A few more products per category (with images) so the Shop tab has a
+-- realistic amount of stock. Guarded with NOT EXISTS so this migration can
+-- be re-run safely.
 INSERT INTO products (name, description, price, category_id, stock_quantity, image_url)
 SELECT 'Multivitamin Gummies', 'Daily multivitamin gummies for adults', 9.99, id, 90,
   'https://placehold.co/400x400/e8f4fd/005eb8.png?text=Multivitamin+Gummies'
@@ -46,19 +89,6 @@ SELECT 'Electrolyte Rehydration Sachets', 'Fast rehydration, orange flavour', 5.
 FROM categories WHERE name = 'Health & Wellness'
 AND NOT EXISTS (SELECT 1 FROM products WHERE name = 'Electrolyte Rehydration Sachets');
 
--- Beauty & Skincare
-INSERT INTO products (name, description, price, category_id, stock_quantity, image_url)
-SELECT 'No7 Radiance Serum', 'Anti-aging face serum', 24.99, id, 50,
-  'https://placehold.co/400x400/e8f4fd/005eb8.png?text=No7+Radiance+Serum'
-FROM categories WHERE name = 'Beauty & Skincare'
-AND NOT EXISTS (SELECT 1 FROM products WHERE name = 'No7 Radiance Serum');
-
-INSERT INTO products (name, description, price, category_id, stock_quantity, image_url)
-SELECT 'Soap & Glory Body Lotion', 'Moisturising body lotion', 9.99, id, 120,
-  'https://placehold.co/400x400/e8f4fd/005eb8.png?text=Soap+%26+Glory+Lotion'
-FROM categories WHERE name = 'Beauty & Skincare'
-AND NOT EXISTS (SELECT 1 FROM products WHERE name = 'Soap & Glory Body Lotion');
-
 INSERT INTO products (name, description, price, category_id, stock_quantity, image_url)
 SELECT 'No7 Hydrating Day Cream', 'Lightweight daily moisturiser with SPF15', 18.99, id, 70,
   'https://placehold.co/400x400/e8f4fd/005eb8.png?text=No7+Day+Cream'
@@ -76,19 +106,6 @@ SELECT 'Maybelline Lash Sensational Mascara', 'Volumising and lengthening mascar
   'https://placehold.co/400x400/e8f4fd/005eb8.png?text=Mascara'
 FROM categories WHERE name = 'Beauty & Skincare'
 AND NOT EXISTS (SELECT 1 FROM products WHERE name = 'Maybelline Lash Sensational Mascara');
-
--- Baby & Parenting
-INSERT INTO products (name, description, price, category_id, stock_quantity, image_url)
-SELECT 'Boots Baby Shampoo', 'Gentle baby shampoo', 4.99, id, 200,
-  'https://placehold.co/400x400/e8f4fd/005eb8.png?text=Boots+Baby+Shampoo'
-FROM categories WHERE name = 'Baby & Parenting'
-AND NOT EXISTS (SELECT 1 FROM products WHERE name = 'Boots Baby Shampoo');
-
-INSERT INTO products (name, description, price, category_id, stock_quantity, image_url)
-SELECT 'Pampers Nappies Size 3', 'Soft and dry nappies', 14.99, id, 150,
-  'https://placehold.co/400x400/e8f4fd/005eb8.png?text=Pampers+Nappies'
-FROM categories WHERE name = 'Baby & Parenting'
-AND NOT EXISTS (SELECT 1 FROM products WHERE name = 'Pampers Nappies Size 3');
 
 INSERT INTO products (name, description, price, category_id, stock_quantity, image_url)
 SELECT 'Johnson''s Baby Wipes (Pack of 4)', '4 x 56 gentle cleansing wipes', 7.49, id, 200,
