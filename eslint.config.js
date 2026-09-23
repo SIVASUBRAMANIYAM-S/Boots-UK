@@ -27,6 +27,9 @@ module.exports = [
         require: 'readonly',
         module: 'readonly',
         fetch: 'readonly',
+        process: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
       },
     },
     settings: {
