@@ -1,20 +1,27 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import { supabase } from './src/services/supabase';
 
 export default function App() {
+  const [status, setStatus] = useState('Connecting...');
+
+  useEffect(() => {
+    supabase
+      .from('categories')
+      .select('*')
+      .then(({ data, error }) => {
+        if (error) setStatus('Error: ' + error.message);
+        else setStatus('Connected! Categories: ' + data?.length);
+      });
+  }, []);
+
   return (
     <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
+      <Text>{status}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  container: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 });
