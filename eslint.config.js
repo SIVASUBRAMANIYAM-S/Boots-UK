@@ -28,6 +28,8 @@ module.exports = [
         module: 'readonly',
         fetch: 'readonly',
         process: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
       },
     },
     settings: {
