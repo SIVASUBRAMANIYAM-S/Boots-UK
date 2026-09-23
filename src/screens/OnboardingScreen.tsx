@@ -9,12 +9,11 @@ import {
   type ListRenderItem,
   type ViewToken,
 } from 'react-native';
-import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/colors';
-import { markOnboardingComplete } from '@/services/onboarding';
+import { useOnboarding } from '@/context/OnboardingContext';
 
 type Slide = {
   id: string;
@@ -33,11 +32,13 @@ const VIEWABILITY_CONFIG = { itemVisiblePercentThreshold: 50 };
 type SlideItemProps = {
   slide: Slide;
   width: number;
+  height: number;
 };
 
-const SlideItem = memo(function SlideItem({ slide, width }: SlideItemProps) {
+// Explicit height is needed because horizontal FlatList cells don't stretch vertically on web.
+const SlideItem = memo(function SlideItem({ slide, width, height }: SlideItemProps) {
   return (
-    <View style={[styles.slide, { width }]}>
+    <View style={[styles.slide, { width, height }]}>
       <Text style={styles.title} accessibilityRole="header">
         {slide.title}
       </Text>
@@ -83,10 +84,11 @@ function OnboardingButton({ label, onPress }: OnboardingButtonProps) {
 }
 
 export default function OnboardingScreen() {
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const listRef = useRef<FlatList<Slide>>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const { completeOnboarding } = useOnboarding();
 
   const isLastSlide = activeIndex === SLIDES.length - 1;
 
@@ -101,8 +103,8 @@ export default function OnboardingScreen() {
   ).current;
 
   const renderItem = useCallback<ListRenderItem<Slide>>(
-    ({ item }) => <SlideItem slide={item} width={width} />,
-    [width],
+    ({ item }) => <SlideItem slide={item} width={width} height={height} />,
+    [width, height],
   );
 
   const getItemLayout = useCallback(
@@ -118,9 +120,10 @@ export default function OnboardingScreen() {
     listRef.current?.scrollToIndex({ index: activeIndex + 1, animated: true });
   };
 
-  const handleGetStarted = async () => {
-    await markOnboardingComplete();
-    router.replace('/login');
+  // Completing onboarding makes this route unavailable, so the root layout
+  // moves on to Login by itself.
+  const handleGetStarted = () => {
+    void completeOnboarding();
   };
 
   return (
@@ -156,7 +159,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
   },
   slide: {
-    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 32,
