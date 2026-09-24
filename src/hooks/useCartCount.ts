@@ -1,19 +1,12 @@
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import { useFocusEffect } from 'expo-router';
 
-import { fetchCartItemCount } from '@/services/cart';
+import { useCartCountContext } from '@/context/CartCountContext';
 
-/** Total quantity in the user's cart, re-synced whenever the screen regains focus. */
-export function useCartCount(userId: string) {
-  const [cartCount, setCartCount] = useState(0);
-
-  const refreshCartCount = useCallback(async () => {
-    try {
-      setCartCount(await fetchCartItemCount(userId));
-    } catch {
-      // Keep the last known count; the badge is informational only.
-    }
-  }, [userId]);
+/** Shared cart count, re-synced with the server whenever the calling screen regains focus. */
+export function useCartCount() {
+  const context = useCartCountContext();
+  const { refreshCartCount } = context;
 
   useFocusEffect(
     useCallback(() => {
@@ -21,9 +14,5 @@ export function useCartCount(userId: string) {
     }, [refreshCartCount]),
   );
 
-  const increaseCartCount = useCallback((quantity: number) => {
-    setCartCount((count) => count + quantity);
-  }, []);
-
-  return { cartCount, refreshCartCount, increaseCartCount };
+  return context;
 }

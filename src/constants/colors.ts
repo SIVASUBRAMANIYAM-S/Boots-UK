@@ -14,4 +14,6 @@ export const Colors = {
   error: '#d0021b',
   success: '#1f7a3d',
   warning: '#c25e00',
+  gold: '#f0a500',
+  goldText: '#9a6a00',
 } as const;

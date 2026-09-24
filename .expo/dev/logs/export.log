@@ -30,3 +30,11 @@
 {"_e":"metro:instantiate","_t":1790195471680,"atlas":false,"workers":8,"host":null,"port":null}
 {"_e":"metro:bundling:started","_t":1790195472099,"id":"1","platform":"web","environment":null,"entry":"node_modules\\expo-router\\entry.js"}
 {"_e":"metro:bundling:done","_t":1790195474787,"id":"1","total":889,"ms":2688.4825}
+{"_e":"root:init","_t":1790227310411,"format":"v0-jsonl","version":"57.0.26"}
+{"_e":"env:mode","_t":1790227310787,"nodeEnv":"production","babelEnv":"production","mode":"production"}
+{"_e":"env:load","_t":1790227310791,"mode":"production","files":["../..\\..\\.env"],"env":{"EXPO_PUBLIC_SUPABASE_ANON_KEY":"sb_publishable_9GWfc491Pd5byk4vIs6pAQ_X026uzF1","EXPO_PUBLIC_SUPABASE_URL":"https://scrdrxrhscbueoazkapm.supabase.co","SUPABASE_DB_URL":"postgresql://postgres.scrdrxrhscbueoazkapm:S.sudamani@2002@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres"}}
+{"_e":"devserver:start","_t":1790227310943,"mode":"production","web":true,"baseUrl":"","asyncRoutes":false,"routerRoot":"../..\\..\\src\\app","serverComponents":false,"serverActions":false,"serverRendering":false,"apiRoutes":false,"exporting":true}
+{"_e":"metro:config","_t":1790227311574,"serverRoot":"../..\\..","projectRoot":"../..\\..","exporting":true,"flags":{"autolinkingModuleResolution":false,"serverActions":false,"serverComponents":false,"reactCompiler":false,"optimizeGraph":false,"treeshaking":false,"logbox":false}}
+{"_e":"metro:instantiate","_t":1790227311922,"atlas":false,"workers":8,"host":null,"port":null}
+{"_e":"metro:bundling:started","_t":1790227312259,"id":"1","platform":"android","environment":null,"entry":"node_modules\\expo-router\\entry.js"}
+{"_e":"metro:bundling:done","_t":1790227325422,"id":"1","total":1384,"ms":13161.8651}
