@@ -1,1 +1,1 @@
-export { default } from '@/screens/AdvantageCardScreen';
+export { default } from '@/screens/card/AdvantageCardScreen';
