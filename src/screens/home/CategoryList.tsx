@@ -1,11 +1,13 @@
 import { memo, useCallback } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, type ListRenderItemInfo } from 'react-native';
+import { FlatList, Image, Pressable, StyleSheet, Text, View, type ListRenderItemInfo } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { getCategoryEmoji } from '@/constants/catalog';
 import { Colors } from '@/constants/colors';
 import type { Category } from '@/types/catalog';
 
-const CARD_WIDTH = 100;
+const CARD_WIDTH = 108;
+const CARD_HEIGHT = 128;
 const CARD_GAP = 12;
 const LIST_PADDING = 16;
 
@@ -30,10 +32,28 @@ const CategoryCard = memo(function CategoryCard({ category, onPress }: CategoryC
       accessibilityLabel={`Shop ${category.name}`}
       style={({ pressed }) => [styles.card, pressed && styles.pressed]}
     >
-      <Text style={styles.emoji}>{getCategoryEmoji(category.name)}</Text>
-      <Text style={styles.name} numberOfLines={2}>
-        {category.name}
-      </Text>
+      {category.image_url ? (
+        <Image
+          source={{ uri: category.image_url }}
+          resizeMode="cover"
+          style={styles.image}
+          accessibilityIgnoresInvertColors
+        />
+      ) : (
+        <View style={[styles.image, styles.imageFallback]}>
+          <Text style={styles.fallbackEmoji}>{getCategoryEmoji(category.name)}</Text>
+        </View>
+      )}
+      <LinearGradient
+        colors={['transparent', 'rgba(0, 0, 0, 0.75)']}
+        locations={[0.35, 1]}
+        style={styles.overlay}
+      >
+        <Text style={styles.badge}>{getCategoryEmoji(category.name)}</Text>
+        <Text style={styles.name} numberOfLines={2}>
+          {category.name}
+        </Text>
+      </LinearGradient>
     </Pressable>
   );
 });
@@ -73,29 +93,48 @@ const styles = StyleSheet.create({
     paddingHorizontal: LIST_PADDING,
   },
   card: {
-    alignItems: 'center',
     backgroundColor: Colors.lightBlue,
-    borderRadius: 12,
-    gap: 4,
-    height: 90,
-    justifyContent: 'center',
+    borderRadius: 16,
+    height: CARD_HEIGHT,
     marginRight: CARD_GAP,
-    paddingHorizontal: 8,
+    overflow: 'hidden',
     width: CARD_WIDTH,
   },
   pressed: {
-    opacity: 0.7,
+    opacity: 0.85,
     transform: [{ scale: 0.97 }],
   },
-  emoji: {
-    fontSize: 26,
+  image: {
+    ...StyleSheet.absoluteFill,
+  },
+  imageFallback: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fallbackEmoji: {
+    fontSize: 32,
+  },
+  overlay: {
+    bottom: 0,
+    justifyContent: 'flex-end',
+    left: 0,
+    padding: 8,
+    position: 'absolute',
+    right: 0,
+    top: 0,
+  },
+  badge: {
+    fontSize: 18,
+    marginBottom: 2,
   },
   name: {
-    color: Colors.primary,
-    fontSize: 13,
+    color: Colors.white,
+    fontSize: 12,
     fontWeight: '700',
-    lineHeight: 16,
-    textAlign: 'center',
+    lineHeight: 15,
+    textShadowColor: 'rgba(0, 0, 0, 0.4)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   empty: {
     color: Colors.mutedText,

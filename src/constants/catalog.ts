@@ -2,8 +2,12 @@ const DEFAULT_CATEGORY_EMOJI = '🛍️';
 
 const CATEGORY_EMOJI: Readonly<Record<string, string>> = {
   'Health & Wellness': '💊',
-  'Beauty & Skincare': '💄',
-  'Baby & Parenting': '🍼',
+  'Vitamins & Supplements': '🌿',
+  Skincare: '🧴',
+  Makeup: '💄',
+  'Baby & Child': '🍼',
+  Toiletries: '🧼',
+  Fragrance: '🌸',
 };
 
 export function getCategoryEmoji(categoryName: string | null | undefined): string {
