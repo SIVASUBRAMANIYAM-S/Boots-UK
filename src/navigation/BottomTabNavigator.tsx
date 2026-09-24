@@ -2,6 +2,9 @@ import { StyleSheet, Text } from 'react-native';
 import { Tabs } from 'expo-router/js-tabs';
 
 import { Colors } from '@/constants/colors';
+import { useCartCountContext } from '@/context/CartCountContext';
+
+const MAX_BADGE_COUNT = 99;
 
 type TabIconProps = {
   emoji: string;
@@ -20,6 +23,11 @@ function tabIcon(emoji: string) {
 }
 
 export default function BottomTabNavigator() {
+  const { cartCount } = useCartCountContext();
+  let cartBadge: string | undefined;
+  if (cartCount > MAX_BADGE_COUNT) cartBadge = `${MAX_BADGE_COUNT}+`;
+  else if (cartCount > 0) cartBadge = String(cartCount);
+
   return (
     <Tabs
       screenOptions={{
@@ -32,7 +40,15 @@ export default function BottomTabNavigator() {
     >
       <Tabs.Screen name="index" options={{ title: 'Home', tabBarIcon: tabIcon('🏠') }} />
       <Tabs.Screen name="shop" options={{ title: 'Shop', tabBarIcon: tabIcon('🛍️') }} />
-      <Tabs.Screen name="cart" options={{ title: 'Cart', tabBarIcon: tabIcon('🛒') }} />
+      <Tabs.Screen
+        name="cart"
+        options={{
+          title: 'Cart',
+          tabBarIcon: tabIcon('🛒'),
+          tabBarBadge: cartBadge,
+          tabBarBadgeStyle: styles.badge,
+        }}
+      />
       <Tabs.Screen name="card" options={{ title: 'My Card', tabBarIcon: tabIcon('💳') }} />
       <Tabs.Screen name="profile" options={{ title: 'Profile', tabBarIcon: tabIcon('👤') }} />
     </Tabs>
@@ -54,5 +70,11 @@ const styles = StyleSheet.create({
   },
   iconInactive: {
     opacity: 0.45,
+  },
+  badge: {
+    backgroundColor: Colors.error,
+    color: Colors.white,
+    fontSize: 10,
+    fontWeight: '800',
   },
 });

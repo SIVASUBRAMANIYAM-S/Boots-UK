@@ -84,7 +84,7 @@ function HomeContent({ session }: { session: Session }) {
   const { width } = useWindowDimensions();
   const { toast, showToast, hideToast } = useToast();
   const { data, isLoading, isRefreshing, retry, refresh } = useHomeData(userId);
-  const { cartCount, refreshCartCount, increaseCartCount } = useCartCount(userId);
+  const { cartCount, refreshCartCount, increaseCartCount } = useCartCount();
   const { favouriteIds, addingIds, openProduct, toggleFavourite, addToCart } = useProductActions({
     userId,
     showToast,

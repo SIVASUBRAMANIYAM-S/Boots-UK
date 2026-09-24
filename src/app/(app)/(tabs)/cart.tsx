@@ -1,1 +1,1 @@
-export { default } from '@/screens/CartScreen';
+export { default } from '@/screens/cart/CartScreen';

@@ -94,7 +94,7 @@ function ProductDetailContent({ userId, productId }: ProductDetailContentProps) 
   const skeletonOpacity = useSkeletonPulse();
   const { toast, showToast, hideToast } = useToast();
   const { data, isLoading, retry } = useProductDetail(productId);
-  const { cartCount, increaseCartCount } = useCartCount(userId);
+  const { cartCount, increaseCartCount } = useCartCount();
   const { favouriteIds, addingIds, addProductToCart, openProduct, toggleFavourite, addToCart } =
     useProductActions({ userId, showToast, onAddedToCart: increaseCartCount });
   const [quantity, setQuantity] = useState(1);

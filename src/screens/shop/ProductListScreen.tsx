@@ -29,6 +29,7 @@ import { useSkeletonPulse } from '@/components/Skeleton';
 import { Toast, useToast } from '@/components/Toast';
 import { getCategoryEmoji } from '@/constants/catalog';
 import { Colors } from '@/constants/colors';
+import { useCartCountContext } from '@/context/CartCountContext';
 import { useSession } from '@/context/SessionContext';
 import { useFetch } from '@/hooks/useFetch';
 import { useProductActions } from '@/hooks/useProductActions';
@@ -97,9 +98,11 @@ function ProductListContent({
   );
   const { data: products, isLoading, isRefreshing, retry, refresh } = useFetch(fetchProducts);
 
+  const { increaseCartCount } = useCartCountContext();
   const { favouriteIds, addingIds, openProduct, toggleFavourite, addToCart } = useProductActions({
     userId,
     showToast,
+    onAddedToCart: increaseCartCount,
   });
 
   const title = useMemo(() => {
