@@ -442,3 +442,113 @@
 {"_e":"metro:client_log","_t":1790229841898,"level":"log","data":["Running application \"main\" with appParams:\n","{\"hydrate\": undefined, \"rootTag\": \"#root\"}","\nDevelopment-level warnings: ON.\nPerformance optimizations: OFF."]}
 {"_e":"metro:client_log","_t":1790229841903,"level":"warn","data":["\"textShadow*\" style props are deprecated. Use \"textShadow\"."]}
 {"_e":"metro:client_log","_t":1790229883560,"level":"warn","data":["Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md"]}
+{"_e":"root:init","_t":1790256129354,"format":"v0-jsonl","version":"57.0.26"}
+{"_e":"env:mode","_t":1790256129354,"nodeEnv":"development","babelEnv":"development","mode":"development"}
+{"_e":"env:load","_t":1790256129356,"mode":"development","files":["../../../.env"],"env":{"EXPO_PUBLIC_SUPABASE_ANON_KEY":"sb_publishable_9GWfc491Pd5byk4vIs6pAQ_X026uzF1","EXPO_PUBLIC_SUPABASE_URL":"https://scrdrxrhscbueoazkapm.supabase.co","SUPABASE_DB_URL":"postgresql://postgres.scrdrxrhscbueoazkapm:S.sudamani@2002@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres"}}
+{"_e":"devserver:start","_t":1790256132616,"mode":"development","web":true,"baseUrl":"","asyncRoutes":false,"routerRoot":"../../../src/app","serverComponents":false,"serverActions":false,"serverRendering":false,"apiRoutes":false,"exporting":false}
+{"_e":"metro:config","_t":1790256132781,"serverRoot":"../../..","projectRoot":"../../..","exporting":false,"flags":{"autolinkingModuleResolution":false,"serverActions":false,"serverComponents":false,"reactCompiler":false,"optimizeGraph":false,"treeshaking":false,"logbox":false}}
+{"_e":"expo:dev-tools-plugin:load","_t":1790256132876,"plugins":[]}
+{"_e":"metro:instantiate","_t":1790256133172,"atlas":false,"workers":7,"host":"::","port":8086}
+{"_e":"metro:bundling:started","_t":1790256198071,"id":"2","platform":"ios","environment":null,"entry":"node_modules/expo-router/entry.js"}
+{"_e":"metro:bundling:progress","_t":1790256198071,"id":"2","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1790256198073,"id":"2","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1790256198173,"id":"2","progress":0.17273759747222558,"total":397,"current":165}
+{"_e":"metro:bundling:progress","_t":1790256198273,"id":"2","progress":0.5076746705393818,"total":967,"current":689}
+{"_e":"metro:bundling:progress","_t":1790256198373,"id":"2","progress":0.8746241309116597,"total":1312,"current":1227}
+{"_e":"metro:bundling:done","_t":1790256198435,"id":"2","total":1312,"ms":364.067875}
+{"_e":"metro:server_log","_t":1790257022673,"level":"error","data":["[timeout] connection terminated with Device for app='%s' on device='%s' after not responding for %s seconds.","host.exp.Exponent","iPhone","60"]}
+{"_e":"metro:bundling:started","_t":1790264624285,"id":"3","platform":"ios","environment":null,"entry":"node_modules/expo-router/entry.js"}
+{"_e":"metro:bundling:progress","_t":1790264624286,"id":"3","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1790264624330,"id":"3","total":1,"ms":43.893833}
+{"_e":"root:init","_t":1790591757401,"format":"v0-jsonl","version":"57.0.26"}
+{"_e":"env:mode","_t":1790591757402,"nodeEnv":"development","babelEnv":"development","mode":"development"}
+{"_e":"env:load","_t":1790591757403,"mode":"development","files":["../../../.env"],"env":{"EXPO_PUBLIC_SUPABASE_ANON_KEY":"sb_publishable_9GWfc491Pd5byk4vIs6pAQ_X026uzF1","EXPO_PUBLIC_SUPABASE_URL":"https://scrdrxrhscbueoazkapm.supabase.co","SUPABASE_DB_URL":"postgresql://postgres.scrdrxrhscbueoazkapm:S.sudamani@2002@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres"}}
+{"_e":"devserver:start","_t":1790591757824,"mode":"development","web":true,"baseUrl":"","asyncRoutes":false,"routerRoot":"../../../src/app","serverComponents":false,"serverActions":false,"serverRendering":false,"apiRoutes":false,"exporting":false}
+{"_e":"metro:config","_t":1790591757975,"serverRoot":"../../..","projectRoot":"../../..","exporting":false,"flags":{"autolinkingModuleResolution":false,"serverActions":false,"serverComponents":false,"reactCompiler":false,"optimizeGraph":false,"treeshaking":false,"logbox":false}}
+{"_e":"expo:dev-tools-plugin:load","_t":1790591758054,"plugins":[]}
+{"_e":"metro:instantiate","_t":1790591758275,"atlas":false,"workers":7,"host":"::","port":8081}
+{"_e":"metro:bundling:started","_t":1790592167747,"id":"1","platform":"web","environment":null,"entry":"node_modules/expo-router/entry.js"}
+{"_e":"metro:bundling:progress","_t":1790592167747,"id":"1","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1790592167748,"id":"1","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1790592168020,"id":"1","progress":0.010000000000000002,"total":1,"current":1}
+{"_e":"metro:bundling:progress","_t":1790592168120,"id":"1","progress":0.28027681660899656,"total":17,"current":9}
+{"_e":"metro:bundling:progress","_t":1790592168221,"id":"1","progress":0.28027681660899656,"total":37,"current":14}
+{"_e":"metro:bundling:progress","_t":1790592168322,"id":"1","progress":0.31360000000000005,"total":50,"current":28}
+{"_e":"metro:bundling:progress","_t":1790592168422,"id":"1","progress":0.31360000000000005,"total":176,"current":61}
+{"_e":"metro:bundling:progress","_t":1790592168523,"id":"1","progress":0.31360000000000005,"total":260,"current":116}
+{"_e":"metro:bundling:progress","_t":1790592168624,"id":"1","progress":0.31360000000000005,"total":313,"current":163}
+{"_e":"metro:bundling:progress","_t":1790592168724,"id":"1","progress":0.3243515685321284,"total":374,"current":213}
+{"_e":"metro:bundling:progress","_t":1790592168824,"id":"1","progress":0.4065937716262976,"total":425,"current":271}
+{"_e":"metro:bundling:progress","_t":1790592168924,"id":"1","progress":0.4994545401752938,"total":491,"current":347}
+{"_e":"metro:bundling:progress","_t":1790592169025,"id":"1","progress":0.4994545401752938,"total":562,"current":386}
+{"_e":"metro:bundling:progress","_t":1790592169125,"id":"1","progress":0.5075993426492054,"total":626,"current":446}
+{"_e":"metro:bundling:progress","_t":1790592169225,"id":"1","progress":0.5740550908412809,"total":685,"current":519}
+{"_e":"metro:bundling:progress","_t":1790592169325,"id":"1","progress":0.6341295071111475,"total":707,"current":563}
+{"_e":"metro:bundling:progress","_t":1790592169425,"id":"1","progress":0.7464019621454023,"total":735,"current":635}
+{"_e":"metro:bundling:progress","_t":1790592169525,"id":"1","progress":0.8314499806483132,"total":794,"current":724}
+{"_e":"metro:bundling:progress","_t":1790592169625,"id":"1","progress":0.8421734969222225,"total":887,"current":814}
+{"_e":"metro:bundling:progress","_t":1790592169725,"id":"1","progress":0.8890376504904876,"total":928,"current":875}
+{"_e":"metro:bundling:progress","_t":1790592169825,"id":"1","progress":0.9146807845331599,"total":986,"current":943}
+{"_e":"metro:bundling:progress","_t":1790592169926,"id":"1","progress":0.9920713890551639,"total":1007,"current":1003}
+{"_e":"metro:bundling:progress","_t":1790592170025,"id":"1","progress":0.9980285859894417,"total":1014,"current":1013}
+{"_e":"metro:bundling:done","_t":1790592170082,"id":"1","total":1014,"ms":2335.563791}
+{"_e":"metro:client_log","_t":1790592170270,"level":"info","data":["%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools","font-weight:bold"]}
+{"_e":"metro:client_log","_t":1790592170270,"level":"log","data":["Running application \"main\" with appParams:\n","{\"hydrate\": undefined, \"rootTag\": \"#root\"}","\nDevelopment-level warnings: ON.\nPerformance optimizations: OFF."]}
+{"_e":"metro:client_log","_t":1790592170270,"level":"warn","data":["\"textShadow*\" style props are deprecated. Use \"textShadow\"."]}
+{"_e":"metro:client_log","_t":1790592234880,"level":"warn","data":["Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md"]}
+{"_e":"metro:client_log","_t":1790592245725,"level":"warn","data":["props.pointerEvents is deprecated. Use style.pointerEvents"]}
+{"_e":"root:init","_t":1790592509947,"format":"v0-jsonl","version":"57.0.26"}
+{"_e":"env:mode","_t":1790592509947,"nodeEnv":"development","babelEnv":"development","mode":"development"}
+{"_e":"env:load","_t":1790592509949,"mode":"development","files":["../../../.env"],"env":{"EXPO_PUBLIC_SUPABASE_ANON_KEY":"sb_publishable_9GWfc491Pd5byk4vIs6pAQ_X026uzF1","EXPO_PUBLIC_SUPABASE_URL":"https://scrdrxrhscbueoazkapm.supabase.co","SUPABASE_DB_URL":"postgresql://postgres.scrdrxrhscbueoazkapm:S.sudamani@2002@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres"}}
+{"_e":"devserver:start","_t":1790592513733,"mode":"development","web":true,"baseUrl":"","asyncRoutes":false,"routerRoot":"../../../src/app","serverComponents":false,"serverActions":false,"serverRendering":false,"apiRoutes":false,"exporting":false}
+{"_e":"metro:config","_t":1790592513894,"serverRoot":"../../..","projectRoot":"../../..","exporting":false,"flags":{"autolinkingModuleResolution":false,"serverActions":false,"serverComponents":false,"reactCompiler":false,"optimizeGraph":false,"treeshaking":false,"logbox":false}}
+{"_e":"expo:dev-tools-plugin:load","_t":1790592513972,"plugins":[]}
+{"_e":"metro:instantiate","_t":1790592514166,"atlas":false,"workers":7,"host":"::","port":8082}
+{"_e":"root:init","_t":1790690717646,"format":"v0-jsonl","version":"57.0.26"}
+{"_e":"env:mode","_t":1790690717647,"nodeEnv":"development","babelEnv":"development","mode":"development"}
+{"_e":"env:load","_t":1790690717648,"mode":"development","files":["../../../.env"],"env":{"EXPO_PUBLIC_SUPABASE_ANON_KEY":"sb_publishable_9GWfc491Pd5byk4vIs6pAQ_X026uzF1","EXPO_PUBLIC_SUPABASE_URL":"https://scrdrxrhscbueoazkapm.supabase.co","SUPABASE_DB_URL":"postgresql://postgres.scrdrxrhscbueoazkapm:S.sudamani@2002@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres"}}
+{"_e":"devserver:start","_t":1790690724832,"mode":"development","web":true,"baseUrl":"","asyncRoutes":false,"routerRoot":"../../../src/app","serverComponents":false,"serverActions":false,"serverRendering":false,"apiRoutes":false,"exporting":false}
+{"_e":"metro:config","_t":1790690725006,"serverRoot":"../../..","projectRoot":"../../..","exporting":false,"flags":{"autolinkingModuleResolution":false,"serverActions":false,"serverComponents":false,"reactCompiler":false,"optimizeGraph":false,"treeshaking":false,"logbox":false}}
+{"_e":"expo:dev-tools-plugin:load","_t":1790690725093,"plugins":[]}
+{"_e":"metro:instantiate","_t":1790690725337,"atlas":false,"workers":7,"host":"::","port":8083}
+{"_e":"root:init","_t":1790690809509,"format":"v0-jsonl","version":"57.0.26"}
+{"_e":"env:mode","_t":1790690809510,"nodeEnv":"development","babelEnv":"development","mode":"development"}
+{"_e":"env:load","_t":1790690809512,"mode":"development","files":["../../../.env"],"env":{"EXPO_PUBLIC_SUPABASE_ANON_KEY":"sb_publishable_9GWfc491Pd5byk4vIs6pAQ_X026uzF1","EXPO_PUBLIC_SUPABASE_URL":"https://scrdrxrhscbueoazkapm.supabase.co","SUPABASE_DB_URL":"postgresql://postgres.scrdrxrhscbueoazkapm:S.sudamani@2002@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres"}}
+{"_e":"devserver:start","_t":1790690811767,"mode":"development","web":true,"baseUrl":"","asyncRoutes":false,"routerRoot":"../../../src/app","serverComponents":false,"serverActions":false,"serverRendering":false,"apiRoutes":false,"exporting":false}
+{"_e":"metro:config","_t":1790690811930,"serverRoot":"../../..","projectRoot":"../../..","exporting":false,"flags":{"autolinkingModuleResolution":false,"serverActions":false,"serverComponents":false,"reactCompiler":false,"optimizeGraph":false,"treeshaking":false,"logbox":false}}
+{"_e":"expo:dev-tools-plugin:load","_t":1790690812018,"plugins":[]}
+{"_e":"metro:instantiate","_t":1790690812349,"atlas":false,"workers":7,"host":"::","port":8084}
+{"_e":"metro:bundling:started","_t":1790690826999,"id":"2","platform":"ios","environment":null,"entry":"node_modules/expo-router/entry.js"}
+{"_e":"metro:bundling:progress","_t":1790690827000,"id":"2","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1790690827002,"id":"2","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1790690827257,"id":"2","progress":0.010000000000000002,"total":1,"current":1}
+{"_e":"metro:bundling:progress","_t":1790690827360,"id":"2","progress":0.16000000000000003,"total":10,"current":4}
+{"_e":"metro:bundling:progress","_t":1790690827503,"id":"2","progress":0.25,"total":10,"current":5}
+{"_e":"metro:bundling:progress","_t":1790690827606,"id":"2","progress":0.25,"total":66,"current":24}
+{"_e":"metro:bundling:progress","_t":1790690827705,"id":"2","progress":0.25,"total":132,"current":43}
+{"_e":"metro:bundling:progress","_t":1790690827805,"id":"2","progress":0.25,"total":291,"current":64}
+{"_e":"metro:bundling:progress","_t":1790690827905,"id":"2","progress":0.25,"total":374,"current":138}
+{"_e":"metro:bundling:progress","_t":1790690828005,"id":"2","progress":0.25,"total":456,"current":201}
+{"_e":"metro:bundling:progress","_t":1790690828105,"id":"2","progress":0.25,"total":497,"current":236}
+{"_e":"metro:bundling:progress","_t":1790690828205,"id":"2","progress":0.27111771700356724,"total":580,"current":302}
+{"_e":"metro:bundling:progress","_t":1790690828306,"id":"2","progress":0.2772605755259843,"total":659,"current":347}
+{"_e":"metro:bundling:progress","_t":1790690828406,"id":"2","progress":0.31055158854386655,"total":777,"current":433}
+{"_e":"metro:bundling:progress","_t":1790690828506,"id":"2","progress":0.3494183301248956,"total":878,"current":519}
+{"_e":"metro:bundling:progress","_t":1790690828606,"id":"2","progress":0.39687358534516487,"total":954,"current":601}
+{"_e":"metro:bundling:progress","_t":1790690828706,"id":"2","progress":0.4708369268929956,"total":991,"current":680}
+{"_e":"metro:bundling:progress","_t":1790690828807,"id":"2","progress":0.5513726784422688,"total":1006,"current":747}
+{"_e":"metro:bundling:progress","_t":1790690828907,"id":"2","progress":0.6059291613186901,"total":1047,"current":815}
+{"_e":"metro:bundling:progress","_t":1790690829007,"id":"2","progress":0.672063160776293,"total":1071,"current":878}
+{"_e":"metro:bundling:progress","_t":1790690829107,"id":"2","progress":0.754696865321765,"total":1097,"current":953}
+{"_e":"metro:bundling:progress","_t":1790690829208,"id":"2","progress":0.785427339660144,"total":1134,"current":1005}
+{"_e":"metro:bundling:progress","_t":1790690829309,"id":"2","progress":0.8417086464463558,"total":1175,"current":1078}
+{"_e":"metro:bundling:progress","_t":1790690829409,"id":"2","progress":0.844733507189912,"total":1236,"current":1136}
+{"_e":"metro:bundling:progress","_t":1790690829513,"id":"2","progress":0.8826422978619822,"total":1256,"current":1180}
+{"_e":"metro:bundling:progress","_t":1790690829613,"id":"2","progress":0.9052833445314706,"total":1298,"current":1235}
+{"_e":"metro:bundling:progress","_t":1790690829713,"id":"2","progress":0.9119262582118958,"total":1354,"current":1293}
+{"_e":"metro:bundling:progress","_t":1790690829814,"id":"2","progress":0.9724151234567903,"total":1368,"current":1349}
+{"_e":"metro:bundling:progress","_t":1790690829914,"id":"2","progress":0.994297944620978,"total":1401,"current":1397}
+{"_e":"metro:bundling:progress","_t":1790690830014,"id":"2","progress":0.9985840709740066,"total":1412,"current":1411}
+{"_e":"metro:bundling:progress","_t":1790690830058,"id":"2","progress":0.999,"total":1412,"current":1412}
+{"_e":"metro:bundling:done","_t":1790690830189,"id":"2","total":1412,"ms":3189.11025}
+{"_e":"metro:server_log","_t":1790691172978,"level":"error","data":["[timeout] connection terminated with Device for app='%s' on device='%s' after not responding for %s seconds.","host.exp.Exponent","iPhone","60"]}
