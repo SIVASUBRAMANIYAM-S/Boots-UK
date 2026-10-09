@@ -32,7 +32,8 @@ export function LoyaltyProvider({ children }: PropsWithChildren) {
     const requestId = ++latestRequestId.current;
     try {
       const profile = await getUserLoyaltyData(userId);
-      if (requestId === latestRequestId.current) setLoyaltyPointsState(profile?.loyalty_points ?? 0);
+      if (requestId === latestRequestId.current)
+        setLoyaltyPointsState(profile?.loyalty_points ?? 0);
     } catch {
       // Keep the last known total; the badge dot is informational only.
     }
@@ -47,6 +48,9 @@ export function LoyaltyProvider({ children }: PropsWithChildren) {
   useEffect(() => {
     setLoyaltyPointsState(null);
     void refreshLoyaltyPoints();
+    return () => {
+      latestRequestId.current += 1;
+    };
   }, [refreshLoyaltyPoints]);
 
   const value = useMemo(
@@ -54,7 +58,9 @@ export function LoyaltyProvider({ children }: PropsWithChildren) {
     [loyaltyPoints, refreshLoyaltyPoints, setLoyaltyPoints],
   );
 
-  return <LoyaltyContext.Provider value={value}>{children}</LoyaltyContext.Provider>;
+  return (
+    <LoyaltyContext.Provider value={value}>{children}</LoyaltyContext.Provider>
+  );
 }
 
 export function useLoyaltyContext(): LoyaltyContextValue {

@@ -127,14 +127,17 @@ database — see [database.md](./database.md).
 **What it is:** A simple persistent key-value store (the React Native equivalent of browser
 `localStorage`).
 
-**Why:** Two things need to survive an app restart without hitting the network: the Supabase auth
-session (so users stay logged in) and the "has completed onboarding" flag.
+**Why:** The Supabase auth session, the "has completed onboarding" flag, and device-local profile
+preferences need to survive an app restart without hitting the network.
 
 **Where:**
 - `src/services/supabase.ts` — passed as the `auth.storage` option so Supabase persists the login
   session
 - `src/services/onboarding.ts` — stores the one-time "onboarding complete" flag read by
   `src/screens/SplashScreen.tsx`
+- [src/services/preferences.ts](../src/services/preferences.ts) — user-scoped profile toggles,
+  serialized persistence, and targeted cleanup on sign out. These are POC preferences, not an
+  integration with notification/email services.
 
 ### `expo-constants` (~57.0.19)
 
