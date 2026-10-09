@@ -39,18 +39,6 @@ import { HeroBanner } from './HeroBanner';
 import { HomeHeader } from './HomeHeader';
 import { HomeSkeleton } from './HomeSkeleton';
 
-function getTimeOfDayGreeting(hour: number): string {
-  if (hour < 12) return 'Good morning';
-  if (hour < 18) return 'Good afternoon';
-  return 'Good evening';
-}
-
-function getFirstName(fullName: unknown): string | null {
-  if (typeof fullName !== 'string') return null;
-  const firstName = fullName.trim().split(/\s+/)[0];
-  return firstName ? firstName : null;
-}
-
 type SectionHeaderProps = {
   title: string;
   actionLabel?: string;
@@ -84,24 +72,23 @@ function HomeContent({ session }: { session: Session }) {
   const { width } = useWindowDimensions();
   const { toast, showToast, hideToast } = useToast();
   const { data, isLoading, isRefreshing, retry, refresh } = useHomeData(userId);
-  const { cartCount, refreshCartCount, increaseCartCount } = useCartCount();
-  const { favouriteIds, addingIds, openProduct, toggleFavourite, addToCart } = useProductActions({
-    userId,
-    showToast,
-    onAddedToCart: increaseCartCount,
-  });
-
-  const greeting = useMemo(() => {
-    const firstName =
-      getFirstName(data?.profile?.full_name) ?? getFirstName(session.user.user_metadata?.full_name);
-    return `${getTimeOfDayGreeting(new Date().getHours())}, ${firstName ?? 'there'}!`;
-  }, [data?.profile?.full_name, session.user.user_metadata]);
+  const { cartCount, refreshCartCount } = useCartCount();
+  const { favouriteIds, addingIds, openProduct, toggleFavourite, addToCart } =
+    useProductActions({
+      userId,
+      showToast,
+    });
 
   const productCardWidth = useMemo(() => getGridCardWidth(width), [width]);
 
   const emojiByCategoryId = useMemo(
     () =>
-      new Map((data?.categories ?? []).map((category) => [category.id, getCategoryEmoji(category.name)])),
+      new Map(
+        (data?.categories ?? []).map((category) => [
+          category.id,
+          getCategoryEmoji(category.name),
+        ]),
+      ),
     [data?.categories],
   );
 
@@ -110,7 +97,11 @@ function HomeContent({ session }: { session: Session }) {
   const handleSeeAll = useCallback(() => router.navigate('/shop'), []);
 
   const handleSearch = useCallback((query: string) => {
-    if (query) router.navigate({ pathname: '/shop', params: { q: query } });
+    if (query)
+      router.navigate({
+        pathname: '/shop',
+        params: { q: query, category_id: undefined, name: undefined },
+      });
   }, []);
 
   const handleCategoryPress = useCallback((category: Category) => {
@@ -130,7 +121,10 @@ function HomeContent({ session }: { session: Session }) {
       <ProductCard
         product={item}
         width={productCardWidth}
-        placeholderEmoji={emojiByCategoryId.get(item.category_id ?? '') ?? getCategoryEmoji(null)}
+        placeholderEmoji={
+          emojiByCategoryId.get(item.category_id ?? '') ??
+          getCategoryEmoji(null)
+        }
         isFavourite={favouriteIds.has(item.id)}
         isAddingToCart={addingIds.has(item.id)}
         onPress={openProduct}
@@ -138,7 +132,15 @@ function HomeContent({ session }: { session: Session }) {
         onAddToCart={addToCart}
       />
     ),
-    [productCardWidth, emojiByCategoryId, favouriteIds, addingIds, openProduct, toggleFavourite, addToCart],
+    [
+      productCardWidth,
+      emojiByCategoryId,
+      favouriteIds,
+      addingIds,
+      openProduct,
+      toggleFavourite,
+      addToCart,
+    ],
   );
 
   let content: ReactNode;
@@ -171,9 +173,16 @@ function HomeContent({ session }: { session: Session }) {
         <HeroBanner />
 
         <SectionHeader title="Shop by Category" />
-        <CategoryList categories={data.categories} onCategoryPress={handleCategoryPress} />
+        <CategoryList
+          categories={data.categories}
+          onCategoryPress={handleCategoryPress}
+        />
 
-        <SectionHeader title="Featured Products" actionLabel="See All" onAction={handleSeeAll} />
+        <SectionHeader
+          title="Featured Products"
+          actionLabel="See All"
+          onAction={handleSeeAll}
+        />
         <FlatList
           data={data.products}
           renderItem={renderProduct}
@@ -184,7 +193,9 @@ function HomeContent({ session }: { session: Session }) {
           style={styles.grid}
           contentContainerStyle={styles.gridContent}
           ListEmptyComponent={
-            <Text style={styles.emptyText}>No featured products right now. Check back soon!</Text>
+            <Text style={styles.emptyText}>
+              No featured products right now. Check back soon!
+            </Text>
           }
         />
 
@@ -200,7 +211,6 @@ function HomeContent({ session }: { session: Session }) {
     <View style={styles.container}>
       <StatusBar style="dark" />
       <HomeHeader
-        greeting={greeting}
         cartCount={cartCount}
         onCartPress={handleCartPress}
         onSearch={handleSearch}

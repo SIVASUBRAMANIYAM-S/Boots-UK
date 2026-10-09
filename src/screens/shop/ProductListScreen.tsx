@@ -24,12 +24,13 @@ import {
   productKeyExtractor,
 } from '@/components/ProductCard';
 import { ProductGridSkeleton } from '@/components/ProductCardSkeleton';
-import { SearchBar } from '@/components/SearchBar';
+import { SearchWishlistBar } from '@/components/SearchWishlistBar';
+import { ShoppingHeaderActions } from '@/components/ShoppingHeaderActions';
 import { useSkeletonPulse } from '@/components/Skeleton';
 import { Toast, useToast } from '@/components/Toast';
 import { getCategoryEmoji } from '@/constants/catalog';
 import { Colors } from '@/constants/colors';
-import { useCartCountContext } from '@/context/CartCountContext';
+import { useCartCount } from '@/hooks/useCartCount';
 import { useSession } from '@/context/SessionContext';
 import { useFetch } from '@/hooks/useFetch';
 import { useProductActions } from '@/hooks/useProductActions';
@@ -54,7 +55,11 @@ function matchesSearch(product: Product, query: string): boolean {
 
 export default function ProductListScreen() {
   const { session } = useSession();
-  const { category_id: categoryId, name, q } = useLocalSearchParams<ShopParams>();
+  const {
+    category_id: categoryId,
+    name,
+    q,
+  } = useLocalSearchParams<ShopParams>();
   if (!session) return null;
 
   // Opening Shop from Home with a new category or search starts a fresh list.
@@ -86,7 +91,8 @@ function ProductListContent({
   const { width } = useWindowDimensions();
   const skeletonOpacity = useSkeletonPulse();
   const { toast, showToast, hideToast } = useToast();
-  const [selectedCategoryId, setSelectedCategoryId] = useState(initialCategoryId);
+  const [selectedCategoryId, setSelectedCategoryId] =
+    useState(initialCategoryId);
   const [searchText, setSearchText] = useState(initialQuery);
   const [sortOption, setSortOption] = useState<SortOption>('recommended');
   const [isSortSheetOpen, setIsSortSheetOpen] = useState(false);
@@ -96,14 +102,20 @@ function ProductListContent({
     () => fetchActiveProducts({ categoryId: selectedCategoryId ?? undefined }),
     [selectedCategoryId],
   );
-  const { data: products, isLoading, isRefreshing, retry, refresh } = useFetch(fetchProducts);
+  const {
+    data: products,
+    isLoading,
+    isRefreshing,
+    retry,
+    refresh,
+  } = useFetch(fetchProducts);
 
-  const { increaseCartCount } = useCartCountContext();
-  const { favouriteIds, addingIds, openProduct, toggleFavourite, addToCart } = useProductActions({
-    userId,
-    showToast,
-    onAddedToCart: increaseCartCount,
-  });
+  useCartCount();
+  const { favouriteIds, addingIds, openProduct, toggleFavourite, addToCart } =
+    useProductActions({
+      userId,
+      showToast,
+    });
 
   const title = useMemo(() => {
     if (!selectedCategoryId) return 'All Products';
@@ -114,12 +126,20 @@ function ProductListContent({
   const visibleProducts = useMemo(() => {
     if (!products) return [];
     const query = searchText.trim().toLowerCase();
-    const filtered = query ? products.filter((product) => matchesSearch(product, query)) : products;
+    const filtered = query
+      ? products.filter((product) => matchesSearch(product, query))
+      : products;
     return sortProducts(filtered, sortOption);
   }, [products, searchText, sortOption]);
 
   const emojiByCategoryId = useMemo(
-    () => new Map((categories ?? []).map((category) => [category.id, getCategoryEmoji(category.name)])),
+    () =>
+      new Map(
+        (categories ?? []).map((category) => [
+          category.id,
+          getCategoryEmoji(category.name),
+        ]),
+      ),
     [categories],
   );
 
@@ -148,7 +168,10 @@ function ProductListContent({
       <ProductCard
         product={item}
         width={productCardWidth}
-        placeholderEmoji={emojiByCategoryId.get(item.category_id ?? '') ?? getCategoryEmoji(null)}
+        placeholderEmoji={
+          emojiByCategoryId.get(item.category_id ?? '') ??
+          getCategoryEmoji(null)
+        }
         isFavourite={favouriteIds.has(item.id)}
         isAddingToCart={addingIds.has(item.id)}
         onPress={openProduct}
@@ -156,7 +179,15 @@ function ProductListContent({
         onAddToCart={addToCart}
       />
     ),
-    [productCardWidth, emojiByCategoryId, favouriteIds, addingIds, openProduct, toggleFavourite, addToCart],
+    [
+      productCardWidth,
+      emojiByCategoryId,
+      favouriteIds,
+      addingIds,
+      openProduct,
+      toggleFavourite,
+      addToCart,
+    ],
   );
 
   let content: ReactNode;
@@ -211,9 +242,17 @@ function ProductListContent({
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <View style={styles.titleRow}>
           {initialCategoryId ? (
-            <IconButton icon="←" accessibilityLabel="Back" onPress={handleBack} />
+            <IconButton
+              icon="←"
+              accessibilityLabel="Back"
+              onPress={handleBack}
+            />
           ) : null}
-          <Text style={styles.title} numberOfLines={1} accessibilityRole="header">
+          <Text
+            style={styles.title}
+            numberOfLines={1}
+            accessibilityRole="header"
+          >
             {title}
           </Text>
           <Pressable
@@ -229,10 +268,15 @@ function ProductListContent({
           >
             <Text style={styles.sortLabel}>Sort ↕</Text>
           </Pressable>
+          <ShoppingHeaderActions />
         </View>
 
         <View style={styles.search}>
-          <SearchBar value={searchText} onChangeText={setSearchText} />
+          <SearchWishlistBar
+            value={searchText}
+            onSearch={setSearchText}
+            onSearchSubmit={setSearchText}
+          />
         </View>
 
         <CategoryFilterChips

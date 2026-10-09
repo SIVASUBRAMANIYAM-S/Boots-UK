@@ -1,5 +1,13 @@
 import { memo, useMemo, useRef } from 'react';
-import { Animated, Image, PanResponder, Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  Animated,
+  Image,
+  PanResponder,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 
 import { getCategoryEmoji } from '@/constants/catalog';
 import { Colors } from '@/constants/colors';
@@ -14,14 +22,23 @@ type CartItemCardProps = {
   item: CartItem;
   onChangeQuantity: (cartId: string, quantity: number) => void;
   onRemove: (item: CartItem) => void;
+  busy?: boolean;
 };
 
-export const CartItemCard = memo(function CartItemCard({ item, onChangeQuantity, onRemove }: CartItemCardProps) {
+export const CartItemCard = memo(function CartItemCard({
+  item,
+  onChangeQuantity,
+  onRemove,
+  busy = false,
+}: CartItemCardProps) {
   const { product, quantity } = item;
   const translateX = useRef(new Animated.Value(0)).current;
   const isOpen = useRef(false);
 
-  const maxQuantity = Math.max(1, Math.min(MAX_QUANTITY, product.stock_quantity));
+  const maxQuantity = Math.max(
+    1,
+    Math.min(MAX_QUANTITY, product.stock_quantity),
+  );
   const categoryName = product.category?.name ?? null;
   const lineTotal = product.price * quantity;
 
@@ -39,10 +56,13 @@ export const CartItemCard = memo(function CartItemCard({ item, onChangeQuantity,
       PanResponder.create({
         // Only claim clearly horizontal drags so the list still scrolls vertically.
         onMoveShouldSetPanResponder: (_event, { dx, dy }) =>
-          Math.abs(dx) > SWIPE_ACTIVATION_DISTANCE && Math.abs(dx) > Math.abs(dy) * 1.5,
+          Math.abs(dx) > SWIPE_ACTIVATION_DISTANCE &&
+          Math.abs(dx) > Math.abs(dy) * 1.5,
         onPanResponderMove: (_event, { dx }) => {
           const base = isOpen.current ? -DELETE_ACTION_WIDTH : 0;
-          translateX.setValue(Math.min(0, Math.max(-DELETE_ACTION_WIDTH * 1.2, base + dx)));
+          translateX.setValue(
+            Math.min(0, Math.max(-DELETE_ACTION_WIDTH * 1.2, base + dx)),
+          );
         },
         onPanResponderRelease: (_event, { dx, vx }) => {
           const base = isOpen.current ? -DELETE_ACTION_WIDTH : 0;
@@ -58,6 +78,7 @@ export const CartItemCard = memo(function CartItemCard({ item, onChangeQuantity,
   return (
     <View style={styles.container}>
       <Pressable
+        disabled={busy}
         onPress={() => onRemove(item)}
         style={styles.swipeAction}
         accessibilityRole="button"
@@ -67,7 +88,10 @@ export const CartItemCard = memo(function CartItemCard({ item, onChangeQuantity,
         <Text style={styles.swipeActionLabel}>Delete</Text>
       </Pressable>
 
-      <Animated.View style={[styles.card, { transform: [{ translateX }] }]} {...panResponder.panHandlers}>
+      <Animated.View
+        style={[styles.card, { transform: [{ translateX }] }]}
+        {...panResponder.panHandlers}
+      >
         <View style={styles.topRow}>
           <View style={styles.imageWrapper}>
             {product.image_url ? (
@@ -86,20 +110,29 @@ export const CartItemCard = memo(function CartItemCard({ item, onChangeQuantity,
             <Text style={styles.name} numberOfLines={2}>
               {product.name}
             </Text>
-            {categoryName ? <Text style={styles.category}>{categoryName}</Text> : null}
+            {categoryName ? (
+              <Text style={styles.category}>{categoryName}</Text>
+            ) : null}
             <Text style={styles.price}>{formatUKPrice(lineTotal)}</Text>
             {quantity > 1 ? (
-              <Text style={styles.unitPrice}>{formatUKPrice(product.price)} each</Text>
+              <Text style={styles.unitPrice}>
+                {formatUKPrice(product.price)} each
+              </Text>
             ) : null}
-            <Text style={styles.points}>💳 Earns {calculateLoyaltyPoints(lineTotal)} points</Text>
+            <Text style={styles.points}>
+              💳 Earns {calculateLoyaltyPoints(lineTotal)} points
+            </Text>
           </View>
         </View>
 
         <View style={styles.quantityRow}>
-          <View style={styles.stepper} accessibilityLabel={`Quantity ${quantity}`}>
+          <View
+            style={styles.stepper}
+            accessibilityLabel={`Quantity ${quantity}`}
+          >
             <Pressable
               onPress={() => onChangeQuantity(item.id, quantity - 1)}
-              disabled={quantity <= 1}
+              disabled={busy || quantity <= 1}
               hitSlop={6}
               accessibilityRole="button"
               accessibilityLabel="Decrease quantity"
@@ -111,7 +144,13 @@ export const CartItemCard = memo(function CartItemCard({ item, onChangeQuantity,
                 pressed && styles.pressed,
               ]}
             >
-              <Text style={[styles.stepLabel, styles.stepLabelOutline, quantity <= 1 && styles.stepLabelDisabled]}>
+              <Text
+                style={[
+                  styles.stepLabel,
+                  styles.stepLabelOutline,
+                  quantity <= 1 && styles.stepLabelDisabled,
+                ]}
+              >
                 −
               </Text>
             </Pressable>
@@ -120,7 +159,7 @@ export const CartItemCard = memo(function CartItemCard({ item, onChangeQuantity,
             </Text>
             <Pressable
               onPress={() => onChangeQuantity(item.id, quantity + 1)}
-              disabled={quantity >= maxQuantity}
+              disabled={busy || quantity >= maxQuantity}
               hitSlop={6}
               accessibilityRole="button"
               accessibilityLabel="Increase quantity"
@@ -137,11 +176,15 @@ export const CartItemCard = memo(function CartItemCard({ item, onChangeQuantity,
           </View>
 
           <Pressable
+            disabled={busy}
             onPress={() => onRemove(item)}
             hitSlop={6}
             accessibilityRole="button"
             accessibilityLabel={`Remove ${product.name} from basket`}
-            style={({ pressed }) => [styles.deleteButton, pressed && styles.pressed]}
+            style={({ pressed }) => [
+              styles.deleteButton,
+              pressed && styles.pressed,
+            ]}
           >
             <Text style={styles.deleteIcon}>🗑️</Text>
           </Pressable>

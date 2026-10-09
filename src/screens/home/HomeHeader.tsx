@@ -1,45 +1,46 @@
-import { memo, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { memo } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BootsLogo } from '@/components/BootsLogo';
 import { CartButton } from '@/components/CartButton';
-import { SearchBar } from '@/components/SearchBar';
+import { WishlistButton } from '@/components/WishlistButton';
+import { SearchWishlistBar } from '@/components/SearchWishlistBar';
 import { Colors } from '@/constants/colors';
 
 type HomeHeaderProps = {
-  greeting: string;
   cartCount: number;
   onCartPress: () => void;
   onSearch: (query: string) => void;
 };
 
 export const HomeHeader = memo(function HomeHeader({
-  greeting,
   cartCount,
   onCartPress,
   onSearch,
 }: HomeHeaderProps) {
   const insets = useSafeAreaInsets();
-  const [query, setQuery] = useState('');
 
   return (
     <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
       <View style={styles.topRow}>
         <BootsLogo size={24} />
-        <CartButton count={cartCount} onPress={onCartPress} />
+        <View style={styles.actions}>
+          <WishlistButton />
+          <CartButton count={cartCount} onPress={onCartPress} />
+        </View>
       </View>
 
-      <Text style={styles.greeting} numberOfLines={1}>
-        {greeting}
-      </Text>
-
-      <SearchBar value={query} onChangeText={setQuery} onSubmitEditing={() => onSearch(query.trim())} />
+      <SearchWishlistBar
+        onSearchSubmit={onSearch}
+        placeholder="Search Boots products..."
+      />
     </View>
   );
 });
 
 const styles = StyleSheet.create({
+  actions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   header: {
     backgroundColor: Colors.white,
     boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
@@ -52,10 +53,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
-  },
-  greeting: {
-    color: Colors.darkText,
-    fontSize: 18,
-    fontWeight: '600',
   },
 });

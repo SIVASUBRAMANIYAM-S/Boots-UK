@@ -1,8 +1,12 @@
-import { memo } from 'react';
-import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { memo, useRef } from 'react';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { FavouriteButton } from '@/components/FavouriteButton';
-import { PLACEHOLDER_RATING, PLACEHOLDER_REVIEW_COUNT } from '@/constants/catalog';
+import { BasketQuantityControl } from '@/components/BasketQuantityControl';
+import {
+  PLACEHOLDER_RATING,
+  PLACEHOLDER_REVIEW_COUNT,
+} from '@/constants/catalog';
 import { Colors } from '@/constants/colors';
 import type { Product } from '@/types/catalog';
 import { formatPrice } from '@/utils/format';
@@ -18,14 +22,23 @@ export const PRODUCT_ROW_HEIGHT = PRODUCT_CARD_HEIGHT + PRODUCT_CARD_MARGIN * 2;
 
 export function getGridCardWidth(screenWidth: number): number {
   return (
-    (screenWidth - PRODUCT_GRID_PADDING * 2 - PRODUCT_CARD_MARGIN * 2 * PRODUCT_GRID_COLUMNS) /
+    (screenWidth -
+      PRODUCT_GRID_PADDING * 2 -
+      PRODUCT_CARD_MARGIN * 2 * PRODUCT_GRID_COLUMNS) /
     PRODUCT_GRID_COLUMNS
   );
 }
 
 // With numColumns, FlatList passes the row index here, not the item index.
-export function getProductRowLayout(_data: ArrayLike<Product> | null | undefined, index: number) {
-  return { length: PRODUCT_ROW_HEIGHT, offset: PRODUCT_ROW_HEIGHT * index, index };
+export function getProductRowLayout(
+  _data: ArrayLike<Product> | null | undefined,
+  index: number,
+) {
+  return {
+    length: PRODUCT_ROW_HEIGHT,
+    offset: PRODUCT_ROW_HEIGHT * index,
+    index,
+  };
 }
 
 export const productKeyExtractor = (product: Product) => product.id;
@@ -38,7 +51,8 @@ type ProductCardProps = {
   isAddingToCart: boolean;
   onPress: (product: Product) => void;
   onToggleFavourite: (productId: string) => void;
-  onAddToCart: (product: Product) => void;
+  onAddToCart: (product: Product) => Promise<boolean>;
+  wishlistCategory?: string;
 };
 
 export const ProductCard = memo(function ProductCard({
@@ -46,18 +60,24 @@ export const ProductCard = memo(function ProductCard({
   width,
   placeholderEmoji,
   isFavourite,
-  isAddingToCart,
   onPress,
   onToggleFavourite,
   onAddToCart,
+  wishlistCategory,
 }: ProductCardProps) {
-  const isOutOfStock = product.stock_quantity <= 0;
-  const isAddDisabled = isOutOfStock || isAddingToCart;
-
+  const imageRef = useRef<View>(null);
   // The heart and Add button sit outside the details Pressable so screen readers
   // can reach them as separate controls.
   return (
-    <View style={[styles.card, { width }]}>
+    <View
+      ref={imageRef}
+      collapsable={false}
+      style={[
+        styles.card,
+        wishlistCategory !== undefined && styles.wishlistCard,
+        { width },
+      ]}
+    >
       <Pressable
         onPress={() => onPress(product)}
         accessibilityRole="button"
@@ -65,7 +85,12 @@ export const ProductCard = memo(function ProductCard({
         accessibilityHint="Opens product details"
         style={({ pressed }) => pressed && styles.detailsPressed}
       >
-        <View style={styles.imageWrapper}>
+        <View
+          style={[
+            styles.imageWrapper,
+            wishlistCategory !== undefined && styles.wishlistImage,
+          ]}
+        >
           {product.image_url ? (
             <Image
               source={{ uri: product.image_url }}
@@ -81,10 +106,24 @@ export const ProductCard = memo(function ProductCard({
         <Text style={styles.name} numberOfLines={2}>
           {product.name}
         </Text>
-        <Text style={styles.rating} numberOfLines={1}>
-          ⭐ {PLACEHOLDER_RATING} <Text style={styles.reviews}>({PLACEHOLDER_REVIEW_COUNT} reviews)</Text>
-        </Text>
+        {wishlistCategory !== undefined ? (
+          <Text style={styles.category} numberOfLines={1}>
+            {wishlistCategory || 'Boots essentials'}
+          </Text>
+        ) : (
+          <Text style={styles.rating} numberOfLines={1}>
+            ⭐ {PLACEHOLDER_RATING}{' '}
+            <Text style={styles.reviews}>
+              ({PLACEHOLDER_REVIEW_COUNT} reviews)
+            </Text>
+          </Text>
+        )}
         <Text style={styles.price}>{formatPrice(product.price)}</Text>
+        {wishlistCategory !== undefined && (
+          <Text style={styles.points}>
+            Earns {Math.floor(product.price * 4)} pts
+          </Text>
+        )}
       </Pressable>
 
       <FavouriteButton
@@ -94,29 +133,28 @@ export const ProductCard = memo(function ProductCard({
         style={styles.favourite}
       />
 
-      <Pressable
-        onPress={() => onAddToCart(product)}
-        disabled={isAddDisabled}
-        accessibilityRole="button"
-        accessibilityLabel={isOutOfStock ? `${product.name} is out of stock` : `Add ${product.name} to cart`}
-        accessibilityState={{ busy: isAddingToCart, disabled: isAddDisabled }}
-        style={({ pressed }) => [
-          styles.addButton,
-          isOutOfStock && styles.addButtonDisabled,
-          pressed && styles.addButtonPressed,
-        ]}
-      >
-        {isAddingToCart ? (
-          <ActivityIndicator size="small" color={Colors.white} />
-        ) : (
-          <Text style={styles.addLabel}>{isOutOfStock ? 'Out of Stock' : 'Add to Cart'}</Text>
-        )}
-      </Pressable>
+      <View style={styles.basketControl}>
+        <BasketQuantityControl
+          productId={product.id}
+          productName={product.name}
+          stockQuantity={product.stock_quantity}
+          active={product.is_active}
+          onAdd={() => onAddToCart(product)}
+          imageRef={imageRef}
+          imageUrl={product.image_url}
+          emoji={placeholderEmoji}
+        />
+      </View>
     </View>
   );
 });
 
 const styles = StyleSheet.create({
+  wishlistCard: { height: 284, boxShadow: '0 4px 12px rgba(0,94,184,0.08)' },
+  wishlistImage: { height: 100 },
+  basketControl: { marginTop: 'auto' },
+  category: { color: Colors.mutedText, fontSize: 11, marginTop: 4 },
+  points: { color: Colors.goldText, fontSize: 11, marginTop: 4 },
   card: {
     backgroundColor: Colors.white,
     borderRadius: 16,
@@ -171,24 +209,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800',
     marginTop: 4,
-  },
-  addButton: {
-    alignItems: 'center',
-    backgroundColor: Colors.primary,
-    borderRadius: 8,
-    height: 36,
-    justifyContent: 'center',
-    marginTop: 'auto',
-  },
-  addButtonDisabled: {
-    backgroundColor: Colors.disabled,
-  },
-  addButtonPressed: {
-    opacity: 0.85,
-  },
-  addLabel: {
-    color: Colors.white,
-    fontSize: 14,
-    fontWeight: '700',
   },
 });

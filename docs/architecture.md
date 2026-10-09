@@ -24,7 +24,10 @@ src/
 │       └── (tabs)/                 # Route group: the 5 bottom tabs
 │           ├── _layout.tsx         # Tab bar definition (re-exports BottomTabNavigator)
 │           ├── index.tsx           # Home tab
-│           ├── shop.tsx
+│           ├── (shopping)/        # Shop tab's nested stack; URLs stay /shop and /wishlist
+│           │   ├── _layout.tsx
+│           │   ├── shop.tsx
+│           │   └── wishlist.tsx
 │           ├── cart.tsx
 │           ├── card.tsx            # Advantage Card
 │           └── profile.tsx
@@ -169,6 +172,92 @@ Run the dependency-free service/helper regression tests with
 `node --test tests/profile-services.test.cjs`. They cover query scope, pagination, stored totals,
 editable columns, storage errors, and sign-out/write ordering using mocked Supabase/AsyncStorage.
 They do not replace native-device or live-backend validation.
+
+### Wishlist and shared search
+
+[SearchWishlistBar](../src/components/SearchWishlistBar.tsx) is shared by Home, Shop, and Product
+Detail. It now renders a full-width search field only. The wishlist heart lives in the top header
+beside Cart, without a separate raised tile. [WishlistButton](../src/components/WishlistButton.tsx)
+and [CartButton](../src/components/CartButton.tsx) share
+[CountIconButton](../src/components/CountIconButton.tsx) for consistent size, pressed state, and
+red count badges (hidden at zero, capped visually at `99+`). The heart uses Boots blue.
+Shop filters while typing. Home/Product Detail
+submit searches to Shop and clear prior category parameters, avoiding navigation mid-typing.
+
+The [wishlist route](../src/app/(app)/(tabs)/(shopping)/wishlist.tsx) re-exports
+[WishlistScreen](../src/screens/WishlistScreen.tsx). It uses a two-column FlatList and the shared
+ProductCard with a wishlist presentation (category and earned points). Adding to the basket keeps
+the favourite saved; unavailable/out-of-stock products cannot be added. Deleted products remain
+removable.
+
+Shop and Wishlist share a [nested stack](../src/app/(app)/(tabs)/(shopping)/_layout.tsx) inside the
+Shop tab, so My Wishlist keeps the actual Home, Shop, Cart, My Card, and Profile bottom navigation
+visible without duplicating it or adding a sixth tab. Public URLs remain `/shop` and `/wishlist`.
+The stack anchors to Shop; wishlist navigation uses `withAnchor` so Back works even when entered
+from Home or Product Detail. Leaving the Shop tab pops its nested stack back to Shop.
+
+[FavouritesContext](../src/context/FavouritesContext.tsx) is the single wishlist/count source of
+truth; no duplicate count provider is needed. Removal and confirmed Clear All are optimistic,
+with rollback and explicit failure messages. Focus/pull refresh reloads joined product data and
+shared favourites. Reads paginate to avoid truncated badges/lists; all writes are scoped to the
+current user through [favourites services](../src/services/favourites.ts) and Supabase RLS.
+Failed initial count reads show an unavailable-count indicator rather than a misleading zero.
+Run `node --test tests/wishlist-services.test.cjs` for wishlist query scope, pagination, removal,
+duplicate-safe saving, and error propagation tests. Browser interaction checks use fixture data
+to avoid modifying real saved products or baskets; native gesture/animation checks still require
+an iOS/Android device.
+
+### Basket quantities and compact summary
+
+[CartCountContext](../src/context/CartCountContext.tsx) now shares per-product quantities and
+pending writes as well as the basket total. [BasketQuantityControl](../src/components/BasketQuantityControl.tsx)
+shows Add to Cart at zero and a compact Boots-blue `− / quantity / +` control after adding. It is
+used by product cards on Home, Shop, and Wishlist and by Product Detail's fixed bottom action.
+Decreasing from one removes that product; increasing respects stock and the 99-item UI ceiling.
+Writes lock per product, update optimistically, and reconcile on failure. Failed loads expose
+Retry instead of pretending the basket is empty. Basket edits publish back into the same context,
+so returning to a product does not lose its added quantity. Home no longer shows time-of-day greetings.
+
+[CartAnimationProvider](../src/context/CartAnimationContext.tsx) animates a product thumbnail in a
+jumping arc toward the active header cart (or the Cart tab on Wishlist) after a successful add
+or quantity increase. Failed writes and decreases never animate. The overlay cannot intercept
+touches and respects reduced-motion preferences; an offscreen product image uses the visible
+quantity control as its starting point.
+
+[OrderSummary](../src/screens/cart/OrderSummary.tsx) starts collapsed. Tap its header or swipe up
+on the handle to reveal subtotal, delivery, discount, total, and promo entry; swipe down or tap to
+close. The detail area scrolls on short screens. Proceed to Checkout stays anchored underneath,
+with writes/refresh failures blocking checkout until resolved. Quantity writes are awaited, not
+left in a debounce timer when navigating away.
+
+The signed-in [app layout](../src/app/(app)/_layout.tsx) registers `(tabs)` before Checkout and
+anchors there. This fixes auth guards choosing Checkout as the first available signed-in screen.
+Fresh sign-in goes to Home; an already authenticated deep link can still open Checkout intentionally.
+
+### Saved delivery addresses
+
+Checkout loads [delivery addresses](../src/services/deliveryAddresses.ts) scoped to the signed-in
+customer. A default address is selected automatically; users can choose another saved address,
+add a new address, and optionally make it the default. The first address becomes default.
+Save Address stays on Delivery; Continue to Payment saves a validated new address before moving
+forward, while existing selections do not insert again. Requests are guarded against duplicate
+taps and stale-account/unmounted results. Address load/save errors retain the customer's form and
+offer retry; they never silently bypass persistence.
+
+[useDeliveryAddresses](../src/hooks/useDeliveryAddresses.ts) and
+[SavedAddressPicker](../src/screens/checkout/SavedAddressPicker.tsx) implement this flow. The selected
+shipping data is still snapshotted into the order, so future default-address changes do not alter
+historical orders.
+
+**Database deployment required:** apply
+[20261009000000_saved_delivery_addresses.sql](../supabase/migrations/20261009000000_saved_delivery_addresses.sql)
+in the correct Supabase project's SQL Editor before using saved addresses. This migration has not
+been applied by the coding session. The app explicitly reports missing schema rather than
+presenting an empty-success address list. See [database.md](./database.md#saved-delivery-address-setup).
+
+Run `node --test tests/*.test.cjs` for service/component regression checks. Browser checks use
+mocked addresses and baskets; actual Supabase migration/RLS and native-device validation remain
+separate deployment checks.
 
 ### Why not a data-fetching library (React Query/SWR)?
 

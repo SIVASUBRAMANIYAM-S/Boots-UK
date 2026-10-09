@@ -1,11 +1,16 @@
-import { memo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Animated,
+  Keyboard,
+  PanResponder,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
+  useWindowDimensions,
   type StyleProp,
   type TextStyle,
 } from 'react-native';
@@ -25,6 +30,7 @@ type OrderSummaryProps = {
   onRemovePromo: () => void;
   onCheckout: () => void;
   isCheckingOut: boolean;
+  checkoutDisabled?: boolean;
 };
 
 type SummaryRowProps = {
@@ -50,75 +56,181 @@ export const OrderSummary = memo(function OrderSummary({
   onRemovePromo,
   onCheckout,
   isCheckingOut,
+  checkoutDisabled = false,
 }: OrderSummaryProps) {
   const [promoInput, setPromoInput] = useState('');
   const canApply = promoInput.trim().length > 0;
+  const [expanded, setExpanded] = useState(false);
+  const progress = useRef(new Animated.Value(0)).current;
+  const { height } = useWindowDimensions();
+  const panelHeight = Math.min(260, height * 0.32);
+  const setOpen = useCallback((next: boolean) => {
+    if (!next) Keyboard.dismiss();
+    setExpanded(next);
+  }, []);
+  useEffect(() => {
+    const animation = Animated.timing(progress, {
+      toValue: expanded ? 1 : 0,
+      duration: 220,
+      useNativeDriver: false,
+    });
+    animation.start();
+    return () => animation.stop();
+  }, [expanded, progress]);
+  const pan = useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_, gesture) =>
+          Math.abs(gesture.dy) > 10 &&
+          Math.abs(gesture.dy) > Math.abs(gesture.dx),
+        onPanResponderRelease: (_, gesture) => {
+          if (gesture.dy < -25) setOpen(true);
+          else if (gesture.dy > 25) setOpen(false);
+        },
+      }),
+    [setOpen],
+  );
 
   return (
     <View style={styles.card}>
-      <SummaryRow label="Subtotal" value={formatUKPrice(totals.subtotal)} />
-      <SummaryRow
-        label="Delivery"
-        value={totals.delivery === 0 ? 'FREE' : formatUKPrice(totals.delivery)}
-        valueStyle={totals.delivery === 0 ? styles.positive : undefined}
-      />
-      {totals.discount > 0 ? (
-        <SummaryRow label="Discount" value={`-${formatUKPrice(totals.discount)}`} valueStyle={styles.positive} />
-      ) : null}
-      <View style={styles.divider} />
-      <View style={styles.row}>
-        <Text style={styles.totalLabel}>Total</Text>
-        <Text style={styles.totalValue}>{formatUKPrice(totals.total)}</Text>
-      </View>
-
-      {appliedPromoCode ? (
-        <View style={styles.appliedPromo}>
-          <Text style={styles.appliedPromoText}>🏷️ {appliedPromoCode}</Text>
-          <Pressable onPress={onRemovePromo} hitSlop={8} accessibilityRole="button" accessibilityLabel="Remove promo code">
-            <Text style={styles.removePromo}>Remove</Text>
-          </Pressable>
-        </View>
-      ) : (
-        <View style={styles.promoRow}>
-          <TextInput
-            value={promoInput}
-            onChangeText={setPromoInput}
-            placeholder="Enter promo code"
-            placeholderTextColor={Colors.inactive}
-            autoCapitalize="characters"
-            autoCorrect={false}
-            returnKeyType="done"
-            onSubmitEditing={() => canApply && onApplyPromo(promoInput)}
-            style={styles.promoInput}
-            accessibilityLabel="Promo code"
-          />
-          <Pressable
-            onPress={() => onApplyPromo(promoInput)}
-            disabled={!canApply}
-            accessibilityRole="button"
-            accessibilityState={{ disabled: !canApply }}
-            style={({ pressed }) => [styles.applyButton, !canApply && styles.applyDisabled, pressed && styles.pressed]}
-          >
-            <Text style={styles.applyLabel}>Apply</Text>
-          </Pressable>
-        </View>
-      )}
-      {promoStatus ? (
-        <Text
-          style={[styles.promoStatus, promoStatus.kind === 'success' ? styles.positive : styles.negative]}
-          accessibilityLiveRegion="polite"
+      <View {...pan.panHandlers}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Order summary"
+          aria-expanded={expanded}
+          accessibilityState={{ expanded }}
+          onPress={() => setOpen(!expanded)}
+          style={styles.summaryHandle}
         >
-          {promoStatus.message}
-        </Text>
-      ) : null}
+          <View style={styles.grabber} />
+          <View style={styles.summaryHeading}>
+            <View>
+              <Text style={styles.summaryTitle}>
+                Order summary {expanded ? '⌄' : '⌃'}
+              </Text>
+              <Text style={styles.summaryHint}>
+                {expanded
+                  ? 'Swipe down to close'
+                  : 'Swipe up for totals & promo'}
+              </Text>
+            </View>
+            <Text style={styles.totalValue}>{formatUKPrice(totals.total)}</Text>
+          </View>
+        </Pressable>
+      </View>
+      <Animated.View
+        aria-hidden={!expanded}
+        accessibilityElementsHidden={!expanded}
+        importantForAccessibility={expanded ? 'auto' : 'no-hide-descendants'}
+        style={[
+          styles.panel,
+          {
+            height: progress.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0, panelHeight],
+            }),
+            opacity: progress,
+            pointerEvents: expanded ? 'auto' : 'none',
+          },
+        ]}
+      >
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.panelContent}
+          showsVerticalScrollIndicator
+        >
+          <SummaryRow label="Subtotal" value={formatUKPrice(totals.subtotal)} />
+          <SummaryRow
+            label="Delivery"
+            value={
+              totals.delivery === 0 ? 'FREE' : formatUKPrice(totals.delivery)
+            }
+            valueStyle={totals.delivery === 0 ? styles.positive : undefined}
+          />
+          {totals.discount > 0 ? (
+            <SummaryRow
+              label="Discount"
+              value={`-${formatUKPrice(totals.discount)}`}
+              valueStyle={styles.positive}
+            />
+          ) : null}
+          <View style={styles.divider} />
+          <View style={styles.row}>
+            <Text style={styles.totalLabel}>Total</Text>
+            <Text style={styles.totalValue}>{formatUKPrice(totals.total)}</Text>
+          </View>
+
+          {appliedPromoCode ? (
+            <View style={styles.appliedPromo}>
+              <Text style={styles.appliedPromoText}>🏷️ {appliedPromoCode}</Text>
+              <Pressable
+                onPress={onRemovePromo}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="Remove promo code"
+              >
+                <Text style={styles.removePromo}>Remove</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <View style={styles.promoRow}>
+              <TextInput
+                value={promoInput}
+                onChangeText={setPromoInput}
+                placeholder="Enter promo code"
+                placeholderTextColor={Colors.inactive}
+                autoCapitalize="characters"
+                autoCorrect={false}
+                returnKeyType="done"
+                onSubmitEditing={() => canApply && onApplyPromo(promoInput)}
+                style={styles.promoInput}
+                accessibilityLabel="Promo code"
+              />
+              <Pressable
+                onPress={() => onApplyPromo(promoInput)}
+                disabled={!canApply}
+                accessibilityRole="button"
+                accessibilityState={{ disabled: !canApply }}
+                style={({ pressed }) => [
+                  styles.applyButton,
+                  !canApply && styles.applyDisabled,
+                  pressed && styles.pressed,
+                ]}
+              >
+                <Text style={styles.applyLabel}>Apply</Text>
+              </Pressable>
+            </View>
+          )}
+          {promoStatus ? (
+            <Text
+              style={[
+                styles.promoStatus,
+                promoStatus.kind === 'success'
+                  ? styles.positive
+                  : styles.negative,
+              ]}
+              accessibilityLiveRegion="polite"
+            >
+              {promoStatus.message}
+            </Text>
+          ) : null}
+        </ScrollView>
+      </Animated.View>
 
       <Pressable
         onPress={onCheckout}
-        disabled={isCheckingOut}
+        disabled={isCheckingOut || checkoutDisabled}
         accessibilityRole="button"
         accessibilityLabel="Proceed to checkout"
-        accessibilityState={{ busy: isCheckingOut }}
-        style={({ pressed }) => [styles.checkoutButton, pressed && styles.pressed]}
+        accessibilityState={{
+          busy: isCheckingOut,
+          disabled: isCheckingOut || checkoutDisabled,
+        }}
+        style={({ pressed }) => [
+          styles.checkoutButton,
+          checkoutDisabled && styles.checkoutDisabled,
+          pressed && styles.pressed,
+        ]}
       >
         <LinearGradient
           colors={[Colors.accent, Colors.primary]}
@@ -139,6 +251,25 @@ export const OrderSummary = memo(function OrderSummary({
 });
 
 const styles = StyleSheet.create({
+  panel: { overflow: 'hidden' },
+  panelContent: { gap: 8, paddingBottom: 10 },
+  summaryHandle: { minHeight: 54, paddingBottom: 4, gap: 8 },
+  grabber: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: Colors.border,
+    alignSelf: 'center',
+  },
+  summaryHeading: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  summaryTitle: { color: Colors.darkText, fontSize: 15, fontWeight: '800' },
+  summaryHint: { color: Colors.mutedText, fontSize: 11, marginTop: 3 },
+  checkoutDisabled: { opacity: 0.5 },
   card: {
     backgroundColor: Colors.white,
     borderTopLeftRadius: 24,
@@ -147,7 +278,7 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingBottom: 14,
     paddingHorizontal: 20,
-    paddingTop: 18,
+    paddingTop: 10,
   },
   row: {
     alignItems: 'center',

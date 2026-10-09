@@ -9,16 +9,17 @@ import type { Product } from '@/types/catalog';
 type UseProductActionsOptions = {
   userId: string;
   showToast: ShowToast;
-  onAddedToCart?: (quantity: number) => void;
 };
 
 /** Handlers shared by every screen that renders ProductCards. */
-export function useProductActions({ userId, showToast, onAddedToCart }: UseProductActionsOptions) {
+export function useProductActions({
+  userId,
+  showToast,
+}: UseProductActionsOptions) {
   const { favouriteIds, toggleFavourite } = useFavourites();
   const { addingIds, addProductToCart } = useAddToCart({
     userId,
     showToast,
-    onAdded: onAddedToCart,
   });
 
   const openProduct = useCallback((product: Product) => {
@@ -28,7 +29,8 @@ export function useProductActions({ userId, showToast, onAddedToCart }: UseProdu
   const handleToggleFavourite = useCallback(
     async (productId: string) => {
       const saved = await toggleFavourite(productId);
-      if (!saved) showToast("Couldn't update favourites. Please try again.", 'error');
+      if (!saved)
+        showToast("Couldn't update favourites. Please try again.", 'error');
     },
     [toggleFavourite, showToast],
   );
