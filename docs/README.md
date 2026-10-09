@@ -34,8 +34,9 @@ customer's basket or orders.
 **Current state of the build:** Splash screen, onboarding, sign up / sign in, home page, product
 browsing and search, product detail pages, shopping basket, and a full checkout flow (delivery →
 payment → confirmation) are built and working end-to-end against the live database. The
-**Advantage Card / loyalty points tab is still a placeholder** ("Coming soon") and is the next
-screen to be built out.
+**Advantage Card and Profile tabs are implemented**. Profile shows account details, order history
+and order details, editable name/phone, and device-local preferences. Checkout/payment, support,
+photo editing, and notification subscriptions remain POC functionality, not live integrations.
 
 **How customers will reach it:** Because it's an Expo app, it can be:
 - Installed as a native app on iOS and Android (via the App Store / Play Store, through a service
