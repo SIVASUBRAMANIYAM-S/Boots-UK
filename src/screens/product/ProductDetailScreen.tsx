@@ -1,9 +1,7 @@
-import { useCallback, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
-  ActivityIndicator,
   FlatList,
   Image,
-  Pressable,
   ScrollView,
   Share,
   StyleSheet,
@@ -16,10 +14,17 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CartButton } from '@/components/CartButton';
+import { WishlistButton } from '@/components/WishlistButton';
+import { BasketQuantityControl } from '@/components/BasketQuantityControl';
+import { SearchWishlistBar } from '@/components/SearchWishlistBar';
 import { ErrorState } from '@/components/ErrorState';
 import { FavouriteButton } from '@/components/FavouriteButton';
 import { IconButton } from '@/components/IconButton';
-import { PRODUCT_CARD_MARGIN, ProductCard, productKeyExtractor } from '@/components/ProductCard';
+import {
+  PRODUCT_CARD_MARGIN,
+  ProductCard,
+  productKeyExtractor,
+} from '@/components/ProductCard';
 import { SkeletonBox, useSkeletonPulse } from '@/components/Skeleton';
 import { Toast, useToast } from '@/components/Toast';
 import {
@@ -56,14 +61,18 @@ const DELIVERY_INFO = [
 type StockStatus = { label: string; color: string };
 
 function getStockStatus(stockQuantity: number): StockStatus {
-  if (stockQuantity <= 0) return { label: '❌ Out of Stock', color: Colors.error };
+  if (stockQuantity <= 0)
+    return { label: '❌ Out of Stock', color: Colors.error };
   if (stockQuantity <= LOW_STOCK_THRESHOLD) {
     return { label: `⚠️ Only ${stockQuantity} left`, color: Colors.warning };
   }
   return { label: '✅ In Stock', color: Colors.success };
 }
 
-const getRelatedItemLayout = (_data: ArrayLike<Product> | null | undefined, index: number) => ({
+const getRelatedItemLayout = (
+  _data: ArrayLike<Product> | null | undefined,
+  index: number,
+) => ({
   length: RELATED_ITEM_LENGTH,
   offset: RELATED_LIST_PADDING + RELATED_ITEM_LENGTH * index,
   index,
@@ -81,7 +90,9 @@ export default function ProductDetailScreen() {
   const { session } = useSession();
   const { id } = useLocalSearchParams<{ id: string }>();
   if (!session || !id) return null;
-  return <ProductDetailContent key={id} userId={session.user.id} productId={id} />;
+  return (
+    <ProductDetailContent key={id} userId={session.user.id} productId={id} />
+  );
 }
 
 type ProductDetailContentProps = {
@@ -89,31 +100,49 @@ type ProductDetailContentProps = {
   productId: string;
 };
 
-function ProductDetailContent({ userId, productId }: ProductDetailContentProps) {
+function ProductDetailContent({
+  userId,
+  productId,
+}: ProductDetailContentProps) {
   const insets = useSafeAreaInsets();
   const skeletonOpacity = useSkeletonPulse();
   const { toast, showToast, hideToast } = useToast();
   const { data, isLoading, retry } = useProductDetail(productId);
-  const { cartCount, increaseCartCount } = useCartCount();
-  const { favouriteIds, addingIds, addProductToCart, openProduct, toggleFavourite, addToCart } =
-    useProductActions({ userId, showToast, onAddedToCart: increaseCartCount });
+  const { cartCount, quantities } = useCartCount();
+  const {
+    favouriteIds,
+    addingIds,
+    addProductToCart,
+    openProduct,
+    toggleFavourite,
+    addToCart,
+  } = useProductActions({
+    userId,
+    showToast,
+  });
   const [quantity, setQuantity] = useState(1);
+  const imageRef = useRef<View>(null);
 
   const product = data?.product ?? null;
+  const basketQuantity = quantities[productId] ?? 0;
   const relatedProducts = data?.relatedProducts ?? [];
   const categoryName = product?.category?.name ?? null;
   const categoryEmoji = getCategoryEmoji(categoryName);
   const stockQuantity = product?.stock_quantity ?? 0;
   const isOutOfStock = stockQuantity <= 0;
-  const maxQuantity = Math.max(1, stockQuantity);
+  const maxQuantity = Math.max(1, Math.min(99, stockQuantity));
   const selectedQuantity = Math.min(quantity, maxQuantity);
-  const isAdding = product ? addingIds.has(product.id) : false;
 
-  const stockStatus = useMemo(() => getStockStatus(stockQuantity), [stockQuantity]);
-  const lineTotal = (product?.price ?? 0) * selectedQuantity;
+  const stockStatus = useMemo(
+    () => getStockStatus(stockQuantity),
+    [stockQuantity],
+  );
+  const lineTotal =
+    (product?.price ?? 0) * (basketQuantity || selectedQuantity);
   const pointsToEarn = Math.floor(lineTotal * ADVANTAGE_POINTS_PER_POUND);
 
-  const bottomBarHeight = BOTTOM_BAR_PADDING * 2 + ADD_BUTTON_HEIGHT + insets.bottom;
+  const bottomBarHeight =
+    BOTTOM_BAR_PADDING * 2 + ADD_BUTTON_HEIGHT + insets.bottom;
 
   const handleCartPress = useCallback(() => router.navigate('/cart'), []);
 
@@ -130,8 +159,8 @@ function ProductDetailContent({ userId, productId }: ProductDetailContentProps) 
   }, [product, showToast]);
 
   const handleAddToCart = useCallback(() => {
-    if (!product || isOutOfStock) return;
-    void addProductToCart(product.id, selectedQuantity, 'Added to cart! 🎉');
+    if (!product || isOutOfStock) return Promise.resolve(false);
+    return addProductToCart(product.id, selectedQuantity, 'Added to cart! 🎉');
   }, [product, isOutOfStock, addProductToCart, selectedQuantity]);
 
   const renderRelatedProduct = useCallback(
@@ -147,19 +176,55 @@ function ProductDetailContent({ userId, productId }: ProductDetailContentProps) 
         onAddToCart={addToCart}
       />
     ),
-    [categoryEmoji, favouriteIds, addingIds, openProduct, toggleFavourite, addToCart],
+    [
+      categoryEmoji,
+      favouriteIds,
+      addingIds,
+      openProduct,
+      toggleFavourite,
+      addToCart,
+    ],
   );
 
   let content: ReactNode;
   if (!data && isLoading) {
     content = (
-      <View style={styles.skeleton} accessible accessibilityLabel="Loading product">
-        <SkeletonBox opacity={skeletonOpacity} width="100%" height={IMAGE_HEIGHT} radius={0} />
+      <View
+        style={styles.skeleton}
+        accessible
+        accessibilityLabel="Loading product"
+      >
+        <SkeletonBox
+          opacity={skeletonOpacity}
+          width="100%"
+          height={IMAGE_HEIGHT}
+          radius={0}
+        />
         <View style={styles.skeletonBody}>
-          <SkeletonBox opacity={skeletonOpacity} width="80%" height={24} radius={6} />
-          <SkeletonBox opacity={skeletonOpacity} width="35%" height={28} radius={6} />
-          <SkeletonBox opacity={skeletonOpacity} width="55%" height={16} radius={6} />
-          <SkeletonBox opacity={skeletonOpacity} width="100%" height={80} radius={12} />
+          <SkeletonBox
+            opacity={skeletonOpacity}
+            width="80%"
+            height={24}
+            radius={6}
+          />
+          <SkeletonBox
+            opacity={skeletonOpacity}
+            width="35%"
+            height={28}
+            radius={6}
+          />
+          <SkeletonBox
+            opacity={skeletonOpacity}
+            width="55%"
+            height={16}
+            radius={6}
+          />
+          <SkeletonBox
+            opacity={skeletonOpacity}
+            width="100%"
+            height={80}
+            radius={12}
+          />
         </View>
       </View>
     );
@@ -182,8 +247,10 @@ function ProductDetailContent({ userId, productId }: ProductDetailContentProps) 
     );
   } else {
     content = (
-      <ScrollView contentContainerStyle={{ paddingBottom: bottomBarHeight + 16 }}>
-        <View style={styles.imageArea}>
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: bottomBarHeight + 16 }}
+      >
+        <View ref={imageRef} collapsable={false} style={styles.imageArea}>
           {product.image_url ? (
             <Image
               source={{ uri: product.image_url }}
@@ -216,20 +283,33 @@ function ProductDetailContent({ userId, productId }: ProductDetailContentProps) 
             <Text style={styles.price}>{formatPrice(product.price)}</Text>
             <Text style={styles.rating}>
               ⭐⭐⭐⭐⭐ {PLACEHOLDER_RATING}
-              <Text style={styles.ratingMuted}> · {PLACEHOLDER_REVIEW_COUNT} reviews</Text>
+              <Text style={styles.ratingMuted}>
+                {' '}
+                · {PLACEHOLDER_REVIEW_COUNT} reviews
+              </Text>
             </Text>
-            <Text style={[styles.stock, { color: stockStatus.color }]}>{stockStatus.label}</Text>
+            <Text style={[styles.stock, { color: stockStatus.color }]}>
+              {stockStatus.label}
+            </Text>
           </View>
 
           <View style={styles.quantityRow}>
-            <Text style={styles.quantityLabel}>Quantity</Text>
-            <QuantitySelector
-              quantity={selectedQuantity}
-              min={1}
-              max={maxQuantity}
-              disabled={isOutOfStock}
-              onChange={setQuantity}
-            />
+            <Text style={styles.quantityLabel}>
+              {basketQuantity ? 'In your basket' : 'Quantity'}
+            </Text>
+            {basketQuantity ? (
+              <Text style={styles.quantityLabel}>
+                {basketQuantity} {basketQuantity === 1 ? 'item' : 'items'}
+              </Text>
+            ) : (
+              <QuantitySelector
+                quantity={selectedQuantity}
+                min={1}
+                max={maxQuantity}
+                disabled={isOutOfStock}
+                onChange={setQuantity}
+              />
+            )}
           </View>
 
           <ProductDescription description={product.description} />
@@ -246,7 +326,8 @@ function ProductDetailContent({ userId, productId }: ProductDetailContentProps) 
           <View style={styles.pointsCard}>
             <Text style={styles.pointsIcon}>💳</Text>
             <Text style={styles.pointsText}>
-              Earn <Text style={styles.pointsValue}>{pointsToEarn}</Text> Advantage Card points
+              Earn <Text style={styles.pointsValue}>{pointsToEarn}</Text>{' '}
+              Advantage Card points
             </Text>
           </View>
         </View>
@@ -279,12 +360,25 @@ function ProductDetailContent({ userId, productId }: ProductDetailContentProps) 
         <Text style={styles.headerTitle} numberOfLines={1}>
           {product?.name ?? ''}
         </Text>
+        <WishlistButton />
         <CartButton count={cartCount} onPress={handleCartPress} />
         <IconButton
           icon="📤"
           accessibilityLabel="Share product"
           onPress={handleShare}
           disabled={!product}
+        />
+      </View>
+
+      <View style={styles.searchBar}>
+        <SearchWishlistBar
+          onSearchSubmit={(q) => {
+            if (q)
+              router.navigate({
+                pathname: '/shop',
+                params: { q, category_id: undefined, name: undefined },
+              });
+          }}
         />
       </View>
 
@@ -297,29 +391,25 @@ function ProductDetailContent({ userId, productId }: ProductDetailContentProps) 
             { paddingBottom: BOTTOM_BAR_PADDING + insets.bottom },
           ]}
         >
-          <Pressable
-            onPress={handleAddToCart}
-            disabled={isOutOfStock || isAdding}
-            accessibilityRole="button"
-            accessibilityState={{ disabled: isOutOfStock || isAdding, busy: isAdding }}
-            style={({ pressed }) => [
-              styles.addButton,
-              isOutOfStock && styles.addButtonDisabled,
-              pressed && styles.addButtonPressed,
-            ]}
-          >
-            {isAdding ? (
-              <ActivityIndicator color={Colors.white} />
-            ) : (
-              <Text style={styles.addLabel}>
-                {isOutOfStock ? 'Out of Stock' : `Add to Cart — ${formatPrice(lineTotal)}`}
-              </Text>
-            )}
-          </Pressable>
+          <BasketQuantityControl
+            productId={product.id}
+            productName={product.name}
+            stockQuantity={product.stock_quantity}
+            active={product.is_active}
+            onAdd={handleAddToCart}
+            imageRef={imageRef}
+            imageUrl={product.image_url}
+            emoji={categoryEmoji}
+            addLabel={`Add to Cart — ${formatPrice(lineTotal)}`}
+          />
         </View>
       ) : null}
 
-      <Toast toast={toast} onHide={hideToast} bottomOffset={product ? bottomBarHeight + 12 : 20} />
+      <Toast
+        toast={toast}
+        onHide={hideToast}
+        bottomOffset={product ? bottomBarHeight + 12 : 20}
+      />
     </View>
   );
 }
@@ -345,6 +435,11 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '700',
     paddingHorizontal: 4,
+  },
+  searchBar: {
+    backgroundColor: Colors.white,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
   skeleton: {
     flex: 1,
@@ -490,23 +585,5 @@ const styles = StyleSheet.create({
     paddingTop: BOTTOM_BAR_PADDING,
     position: 'absolute',
     right: 0,
-  },
-  addButton: {
-    alignItems: 'center',
-    backgroundColor: Colors.primary,
-    borderRadius: 12,
-    height: ADD_BUTTON_HEIGHT,
-    justifyContent: 'center',
-  },
-  addButtonDisabled: {
-    backgroundColor: Colors.disabled,
-  },
-  addButtonPressed: {
-    opacity: 0.85,
-  },
-  addLabel: {
-    color: Colors.white,
-    fontSize: 16,
-    fontWeight: '700',
   },
 });

@@ -108,7 +108,8 @@ Line items belonging to an order (product + quantity + price at time of purchase
 subquery against `orders`). No `UPDATE`/`DELETE`.
 
 ### `cart`
-The live shopping basket — one row per (user, product) pair.
+The live shopping basket. The current schema does not enforce a unique (user, product) pair;
+the app aggregates quantities and consolidates duplicate rows when setting a product quantity.
 
 | Column | Type | Notes |
 |---|---|---|
@@ -119,6 +120,41 @@ The live shopping basket — one row per (user, product) pair.
 | `created_at` | TIMESTAMPTZ | |
 
 **Access:** Full `SELECT`/`INSERT`/`UPDATE`/`DELETE`, but only on the user's **own** rows.
+
+### `delivery_addresses`
+
+Added by
+[20261009000000_saved_delivery_addresses.sql](../supabase/migrations/20261009000000_saved_delivery_addresses.sql).
+This migration must be deployed; its presence in Git does not mean the remote database has it.
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | UUID | Saved address ID |
+| `user_id` | UUID | Owning customer |
+| `shipping_address` | JSONB | Full name, two address lines, city, UK postcode, phone |
+| `is_default` | BOOLEAN | At most one default per owner |
+| `created_at` | TIMESTAMPTZ | Stable selection/list ordering |
+
+**Access:** Owner-only SELECT with RLS. Clients cannot write the table directly. Authenticated-only
+`save_delivery_address(p_shipping_address, p_make_default)` and
+`set_default_delivery_address(p_address_id)` functions derive ownership from `auth.uid()` rather
+than accepting a user ID. They normalize/deduplicate addresses and serialize default changes per
+customer. Orders continue to store independent shipping-address snapshots.
+
+### Saved delivery address setup
+
+1. Open the correct Supabase project → **SQL Editor** → **New Query**.
+2. Paste the entire
+   [saved-address migration](../supabase/migrations/20261009000000_saved_delivery_addresses.sql)
+   and run it **once**. It uses a transaction; a failure rolls back instead of partially deploying.
+   It is not intended to be rerun after successful creation.
+3. Verify the new table/functions appear, then reload the app and try saving/selecting an address.
+   If the API schema cache has not updated, refresh it before retrying.
+4. When using Supabase CLI migrations later, reconcile its migration history: SQL Editor execution
+   does not automatically mark the file as applied in CLI history.
+
+The coding session does not apply this SQL automatically. Validate with two signed-in test accounts
+that each can read/select only their own addresses and cannot set another customer's default.
 
 ### `favourites`
 Added in

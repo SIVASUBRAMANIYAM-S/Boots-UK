@@ -1,14 +1,50 @@
 import { supabase } from '@/services/supabase';
+import type { ProductWithCategory } from '@/types/catalog';
+
+export type WishlistEntry = {
+  product_id: string;
+  product: ProductWithCategory | null;
+};
+
+export async function getWishlist(userId: string): Promise<WishlistEntry[]> {
+  const entries: WishlistEntry[] = [];
+  for (let offset = 0; ; offset += 100) {
+    const { data, error } = await supabase
+      .from('favourites')
+      .select('product_id, product:products(*, category:categories(id, name))')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .order('id')
+      .range(offset, offset + 99)
+      .overrideTypes<WishlistEntry[], { merge: false }>();
+    if (error) throw error;
+    entries.push(...data);
+    if (data.length < 100) return entries;
+  }
+}
+
+export async function clearFavourites(userId: string): Promise<void> {
+  const { error } = await supabase
+    .from('favourites')
+    .delete()
+    .eq('user_id', userId);
+  if (error) throw error;
+}
 
 export async function getFavourites(userId: string): Promise<Set<string>> {
-  const { data, error } = await supabase
-    .from('favourites')
-    .select('product_id')
-    .eq('user_id', userId)
-    .overrideTypes<{ product_id: string }[], { merge: false }>();
-
-  if (error) throw error;
-  return new Set(data.map((row) => row.product_id));
+  const ids = new Set<string>();
+  for (let offset = 0; ; offset += 100) {
+    const { data, error } = await supabase
+      .from('favourites')
+      .select('product_id')
+      .eq('user_id', userId)
+      .order('id')
+      .range(offset, offset + 99)
+      .overrideTypes<{ product_id: string }[], { merge: false }>();
+    if (error) throw error;
+    data.forEach((row) => ids.add(row.product_id));
+    if (data.length < 100) return ids;
+  }
 }
 
 /** Adds or removes the favourite and resolves with the new favourite state. */

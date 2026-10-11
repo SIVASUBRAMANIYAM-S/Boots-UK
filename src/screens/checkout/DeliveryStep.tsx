@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { Pressable, StyleSheet, Text, View, type TextInput } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View, type TextInput } from 'react-native';
 
 import {
   EXPRESS_DELIVERY_FEE,
@@ -8,15 +8,17 @@ import {
   type DeliveryMethod,
 } from '@/constants/checkout';
 import { Colors } from '@/constants/colors';
+import type { DeliveryAddressState } from '@/hooks/useDeliveryAddresses';
 import type { ShippingAddress } from '@/services/orders';
 import { formatUKPrice } from '@/utils/orderUtils';
 import { formatUKPostcode } from '@/utils/validation';
 
 import { CheckoutCard, CheckoutField, SectionTitle } from './CheckoutField';
-
-export type AddressErrors = Partial<Record<keyof ShippingAddress, string>>;
+import { SavedAddressPicker } from './SavedAddressPicker';
+import type { AddressErrors } from '@/services/deliveryAddresses';
 
 type DeliveryStepProps = {
+  savedAddresses: DeliveryAddressState;
   address: ShippingAddress;
   errors: AddressErrors;
   onChangeAddress: (field: keyof ShippingAddress, value: string) => void;
@@ -40,6 +42,7 @@ function DeliveryOption({ icon, title, subtitle, price, isFree, isSelected, onPr
     <Pressable
       onPress={onPress}
       accessibilityRole="radio"
+      aria-checked={isSelected}
       accessibilityState={{ checked: isSelected }}
       accessibilityLabel={`${title}, ${subtitle}, ${price}`}
       style={({ pressed }) => [styles.option, isSelected && styles.optionSelected, pressed && styles.pressed]}
@@ -59,6 +62,7 @@ function DeliveryOption({ icon, title, subtitle, price, isFree, isSelected, onPr
 }
 
 export function DeliveryStep({
+  savedAddresses,
   address,
   errors,
   onChangeAddress,
@@ -77,8 +81,12 @@ export function DeliveryStep({
   return (
     <View style={styles.container}>
       <SectionTitle>Delivery Address</SectionTitle>
+      <SavedAddressPicker state={savedAddresses} />
+      {savedAddresses.isAdding && !savedAddresses.isLoading && !savedAddresses.loadError ? (
       <CheckoutCard>
+        <Text style={styles.formTitle}>New delivery address</Text>
         <CheckoutField
+          editable={!savedAddresses.isSaving}
           label="Full Name"
           value={address.fullName}
           onChangeText={(value) => onChangeAddress('fullName', value)}
@@ -88,8 +96,10 @@ export function DeliveryStep({
           returnKeyType="next"
           onSubmitEditing={() => line1Ref.current?.focus()}
           submitBehavior="submit"
+          maxLength={120}
         />
         <CheckoutField
+          editable={!savedAddresses.isSaving}
           ref={line1Ref}
           label="Address Line 1"
           value={address.line1}
@@ -100,21 +110,26 @@ export function DeliveryStep({
           returnKeyType="next"
           onSubmitEditing={() => line2Ref.current?.focus()}
           submitBehavior="submit"
+          maxLength={160}
         />
         <CheckoutField
+          editable={!savedAddresses.isSaving}
           ref={line2Ref}
           label="Address Line 2 (optional)"
           value={address.line2}
+          error={errors.line2}
           onChangeText={(value) => onChangeAddress('line2', value)}
           autoComplete="address-line2"
           textContentType="streetAddressLine2"
           returnKeyType="next"
           onSubmitEditing={() => cityRef.current?.focus()}
           submitBehavior="submit"
+          maxLength={160}
         />
         <View style={styles.row}>
           <View style={styles.rowItem}>
             <CheckoutField
+              editable={!savedAddresses.isSaving}
               ref={cityRef}
               label="City"
               value={address.city}
@@ -124,10 +139,12 @@ export function DeliveryStep({
               returnKeyType="next"
               onSubmitEditing={() => postcodeRef.current?.focus()}
               submitBehavior="submit"
+              maxLength={100}
             />
           </View>
           <View style={styles.rowItem}>
             <CheckoutField
+              editable={!savedAddresses.isSaving}
               ref={postcodeRef}
               label="Postcode"
               value={address.postcode}
@@ -147,6 +164,7 @@ export function DeliveryStep({
           </View>
         </View>
         <CheckoutField
+          editable={!savedAddresses.isSaving}
           ref={phoneRef}
           label="Phone Number"
           value={address.phone}
@@ -158,7 +176,47 @@ export function DeliveryStep({
           textContentType="telephoneNumber"
           maxLength={16}
         />
+        {savedAddresses.addresses.length ? (
+          <Pressable
+            accessibilityRole="checkbox"
+            aria-checked={savedAddresses.makeDefault}
+            accessibilityState={{ checked: savedAddresses.makeDefault, disabled: savedAddresses.isSaving }}
+            disabled={savedAddresses.isSaving}
+            onPress={() => savedAddresses.changeMakeDefault(!savedAddresses.makeDefault)}
+            style={styles.defaultToggle}
+          >
+            <View style={[styles.checkbox, savedAddresses.makeDefault && styles.checkboxSelected]}>
+              {savedAddresses.makeDefault ? <Text style={styles.checkmark}>✓</Text> : null}
+            </View>
+            <Text style={styles.defaultLabel}>Make this my default address</Text>
+          </Pressable>
+        ) : <Text style={styles.hint}>Your first saved address becomes your default.</Text>}
+        {savedAddresses.saveError ? <Text style={styles.saveError} accessibilityRole="alert">{savedAddresses.saveError}</Text> : null}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityState={{ busy: savedAddresses.isSaving, disabled: savedAddresses.isSaving }}
+          disabled={savedAddresses.isSaving}
+          onPress={() => void savedAddresses.ensureSaved()}
+          style={styles.saveButton}
+        >
+          {savedAddresses.isSaving ? <ActivityIndicator color={Colors.white} /> : <Text style={styles.saveLabel}>Save address</Text>}
+        </Pressable>
+        <Text style={styles.hint}>Continuing also saves this address securely to your account.</Text>
+        {savedAddresses.addresses.length ? (
+          <Pressable
+            accessibilityRole="button"
+            disabled={savedAddresses.isSaving}
+            onPress={() => {
+              const previous = savedAddresses.addresses.find((row) => row.isDefault) ?? savedAddresses.addresses[0];
+              savedAddresses.selectAddress(previous);
+            }}
+            style={styles.cancelButton}
+          >
+            <Text style={styles.cancelLabel}>Use a saved address instead</Text>
+          </Pressable>
+        ) : null}
       </CheckoutCard>
+      ) : null}
 
       <SectionTitle>Delivery Option</SectionTitle>
       <View style={styles.options} accessibilityRole="radiogroup">
@@ -186,6 +244,18 @@ export function DeliveryStep({
 }
 
 const styles = StyleSheet.create({
+  formTitle: { color: Colors.darkText, fontSize: 16, fontWeight: '700' },
+  saveError: { color: Colors.error, fontSize: 13, lineHeight: 20 },
+  defaultToggle: { alignItems: 'center', flexDirection: 'row', gap: 10, minHeight: 44 },
+  checkbox: { alignItems: 'center', borderColor: Colors.border, borderRadius: 6, borderWidth: 1, height: 24, justifyContent: 'center', width: 24 },
+  checkboxSelected: { backgroundColor: Colors.primary, borderColor: Colors.primary },
+  checkmark: { color: Colors.white, fontWeight: '700' },
+  defaultLabel: { color: Colors.darkText, flex: 1, fontSize: 14 },
+  hint: { color: Colors.mutedText, fontSize: 12, lineHeight: 18 },
+  saveButton: { alignItems: 'center', backgroundColor: Colors.primary, borderRadius: 12, justifyContent: 'center', minHeight: 48 },
+  saveLabel: { color: Colors.white, fontSize: 15, fontWeight: '700' },
+  cancelButton: { alignItems: 'center', justifyContent: 'center', minHeight: 44 },
+  cancelLabel: { color: Colors.primary, fontSize: 14, fontWeight: '600' },
   container: {
     gap: 14,
   },

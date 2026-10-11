@@ -1,35 +1,32 @@
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 
 import type { ShowToast } from '@/components/Toast';
-import { addToCart } from '@/services/cart';
+import { useCartCountContext } from '@/context/CartCountContext';
 
 type UseAddToCartOptions = {
   userId: string;
   showToast: ShowToast;
-  onAdded?: (quantity: number) => void;
 };
 
-export function useAddToCart({ userId, showToast, onAdded }: UseAddToCartOptions) {
-  const [addingIds, setAddingIds] = useState<ReadonlySet<string>>(() => new Set());
+export function useAddToCart({ showToast }: UseAddToCartOptions) {
+  const { pendingProductIds: addingIds, addProduct } = useCartCountContext();
 
   const addProductToCart = useCallback(
-    async (productId: string, quantity = 1, successMessage = 'Added to cart!') => {
-      setAddingIds((current) => new Set(current).add(productId));
+    async (
+      productId: string,
+      quantity = 1,
+      successMessage = 'Added to cart!',
+    ) => {
       try {
-        await addToCart(userId, productId, quantity);
-        onAdded?.(quantity);
+        await addProduct(productId, quantity);
         showToast(successMessage);
+        return true;
       } catch {
         showToast("Couldn't add to cart. Please try again.", 'error');
-      } finally {
-        setAddingIds((current) => {
-          const next = new Set(current);
-          next.delete(productId);
-          return next;
-        });
+        return false;
       }
     },
-    [userId, showToast, onAdded],
+    [addProduct, showToast],
   );
 
   return { addingIds, addProductToCart };

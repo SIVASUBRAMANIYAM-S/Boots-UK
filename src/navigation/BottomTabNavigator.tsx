@@ -3,6 +3,7 @@ import { Tabs } from 'expo-router/js-tabs';
 
 import { Colors } from '@/constants/colors';
 import { useCartCountContext } from '@/context/CartCountContext';
+import { CartAnimationTarget } from '@/context/CartAnimationContext';
 import { useLoyaltyContext } from '@/context/LoyaltyContext';
 import { REDEMPTION_THRESHOLD } from '@/services/loyaltyService';
 
@@ -18,13 +19,23 @@ type TabIconProps = {
 
 // Emoji glyphs can't be tinted, so dim inactive icons to match the grey labels.
 function TabIcon({ emoji, focused }: TabIconProps) {
-  return <Text style={[styles.icon, !focused && styles.iconInactive]}>{emoji}</Text>;
+  return (
+    <Text style={[styles.icon, !focused && styles.iconInactive]}>{emoji}</Text>
+  );
 }
 
 function tabIcon(emoji: string) {
   return function renderTabIcon({ focused }: { focused: boolean }) {
     return <TabIcon emoji={emoji} focused={focused} />;
   };
+}
+
+function cartIcon({ focused }: { focused: boolean }) {
+  return (
+    <CartAnimationTarget>
+      <TabIcon emoji="🛒" focused={focused} />
+    </CartAnimationTarget>
+  );
 }
 
 export default function BottomTabNavigator() {
@@ -45,13 +56,23 @@ export default function BottomTabNavigator() {
         tabBarLabelStyle: styles.label,
       }}
     >
-      <Tabs.Screen name="index" options={{ title: 'Home', tabBarIcon: tabIcon('🏠') }} />
-      <Tabs.Screen name="shop" options={{ title: 'Shop', tabBarIcon: tabIcon('🛍️') }} />
+      <Tabs.Screen
+        name="index"
+        options={{ title: 'Home', tabBarIcon: tabIcon('🏠') }}
+      />
+      <Tabs.Screen
+        name="(shopping)"
+        options={{
+          title: 'Shop',
+          tabBarIcon: tabIcon('🛍️'),
+          popToTopOnBlur: true,
+        }}
+      />
       <Tabs.Screen
         name="cart"
         options={{
           title: 'Cart',
-          tabBarIcon: tabIcon('🛒'),
+          tabBarIcon: cartIcon,
           tabBarBadge: cartBadge,
           tabBarBadgeStyle: styles.badge,
         }}
@@ -65,7 +86,10 @@ export default function BottomTabNavigator() {
           tabBarBadgeStyle: styles.goldDot,
         }}
       />
-      <Tabs.Screen name="profile" options={{ title: 'Profile', tabBarIcon: tabIcon('👤') }} />
+      <Tabs.Screen
+        name="profile"
+        options={{ title: 'Profile', tabBarIcon: tabIcon('👤') }}
+      />
     </Tabs>
   );
 }

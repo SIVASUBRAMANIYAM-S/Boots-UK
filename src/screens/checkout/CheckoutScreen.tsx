@@ -23,8 +23,9 @@ import { Colors } from '@/constants/colors';
 import { useCartCountContext } from '@/context/CartCountContext';
 import { useSession } from '@/context/SessionContext';
 import { useFetch } from '@/hooks/useFetch';
+import { useDeliveryAddresses } from '@/hooks/useDeliveryAddresses';
 import { calculateTotal, getCartItems } from '@/services/cart';
-import { placeOrder, type ShippingAddress } from '@/services/orders';
+import { placeOrder } from '@/services/orders';
 import { fetchProfile } from '@/services/profile';
 import { getFirstName } from '@/utils/orderUtils';
 import {
@@ -34,25 +35,12 @@ import {
   isValidCvv,
   isValidExpiry,
 } from '@/utils/payment';
-import { formatUKPostcode, isValidUKPhone, isValidUKPostcode } from '@/utils/validation';
-
-import { DeliveryStep, type AddressErrors } from './DeliveryStep';
+import { DeliveryStep } from './DeliveryStep';
 import { PaymentStep, type CardDetails, type CardErrors } from './PaymentStep';
 import { ReviewStep } from './ReviewStep';
 import { CHECKOUT_STEPS, StepIndicator } from './StepIndicator';
 
-const EMPTY_ADDRESS: ShippingAddress = { fullName: '', line1: '', line2: '', city: '', postcode: '', phone: '' };
 const EMPTY_CARD: CardDetails = { number: '', expiry: '', cvv: '', name: '' };
-
-function validateAddress(address: ShippingAddress): AddressErrors {
-  const errors: AddressErrors = {};
-  if (!address.fullName.trim()) errors.fullName = 'Enter your full name';
-  if (!address.line1.trim()) errors.line1 = 'Enter the first line of your address';
-  if (!address.city.trim()) errors.city = 'Enter your town or city';
-  if (!isValidUKPostcode(address.postcode)) errors.postcode = 'Enter a valid UK postcode';
-  if (!isValidUKPhone(address.phone)) errors.phone = 'Enter a valid UK phone number';
-  return errors;
-}
 
 function validateCard(card: CardDetails): CardErrors {
   const errors: CardErrors = {};
@@ -74,7 +62,7 @@ function getErrorMessage(error: unknown): string {
 export default function CheckoutScreen() {
   const { session } = useSession();
   if (!session) return null;
-  return <CheckoutContent userId={session.user.id} />;
+  return <CheckoutContent key={session.user.id} userId={session.user.id} />;
 }
 
 function CheckoutContent({ userId }: { userId: string }) {
@@ -93,17 +81,16 @@ function CheckoutContent({ userId }: { userId: string }) {
   const { data, isLoading, retry } = useFetch(fetcher);
 
   const [step, setStep] = useState(0);
-  const [address, setAddress] = useState<ShippingAddress>(EMPTY_ADDRESS);
-  const [addressErrors, setAddressErrors] = useState<AddressErrors>({});
   const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>('standard');
   const [card, setCard] = useState<CardDetails>(EMPTY_CARD);
   const [cardErrors, setCardErrors] = useState<CardErrors>({});
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
   const profileName = data?.profile?.full_name ?? '';
+  const savedAddresses = useDeliveryAddresses(userId, profileName);
+  const { address } = savedAddresses;
   useEffect(() => {
     if (!profileName) return;
-    setAddress((current) => (current.fullName ? current : { ...current, fullName: profileName }));
     setCard((current) => (current.name ? current : { ...current, name: profileName }));
   }, [profileName]);
 
@@ -120,6 +107,7 @@ function CheckoutContent({ userId }: { userId: string }) {
   }, []);
 
   const handleBack = useCallback(() => {
+    if (savedAddresses.isSaving) return;
     if (step > 0) {
       goToStep(step - 1);
     } else if (router.canGoBack()) {
@@ -127,24 +115,23 @@ function CheckoutContent({ userId }: { userId: string }) {
     } else {
       router.navigate('/cart');
     }
-  }, [goToStep, step]);
+  }, [goToStep, step, savedAddresses.isSaving]);
 
   // Android back steps backwards through checkout before leaving it.
   useFocusEffect(
     useCallback(() => {
+      if (savedAddresses.isSaving) {
+        const subscription = BackHandler.addEventListener('hardwareBackPress', () => true);
+        return () => subscription.remove();
+      }
       if (step === 0 || isPlacingOrder) return undefined;
       const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
         goToStep(step - 1);
         return true;
       });
       return () => subscription.remove();
-    }, [goToStep, isPlacingOrder, step]),
+    }, [goToStep, isPlacingOrder, step, savedAddresses.isSaving]),
   );
-
-  const handleChangeAddress = useCallback((field: keyof ShippingAddress, value: string) => {
-    setAddress((current) => ({ ...current, [field]: value }));
-    setAddressErrors((current) => (current[field] ? { ...current, [field]: undefined } : current));
-  }, []);
 
   const handleChangeCard = useCallback((field: keyof CardDetails, value: string) => {
     setCard((current) => ({ ...current, [field]: value }));
@@ -156,18 +143,13 @@ function CheckoutContent({ userId }: { userId: string }) {
     setCardErrors({});
   }, [profileName]);
 
-  const handleContinueToPayment = useCallback(() => {
-    const errors = validateAddress(address);
-    setAddressErrors(errors);
-    if (Object.keys(errors).length > 0) {
-      showToast('Please check your delivery details', 'error');
-      return;
-    }
-    setAddress((current) => ({ ...current, postcode: formatUKPostcode(current.postcode) }));
-    goToStep(1);
-  }, [address, goToStep, showToast]);
+  const handleContinueToPayment = async () => {
+    if (step !== 0) return;
+    if (await savedAddresses.ensureSaved()) goToStep(1);
+  };
 
   const handleReviewOrder = useCallback(() => {
+    if (step !== 1) return;
     const errors = validateCard(card);
     setCardErrors(errors);
     if (Object.keys(errors).length > 0) {
@@ -175,7 +157,7 @@ function CheckoutContent({ userId }: { userId: string }) {
       return;
     }
     goToStep(2);
-  }, [card, goToStep, showToast]);
+  }, [card, goToStep, showToast, step]);
 
   const handlePlaceOrder = useCallback(async () => {
     setIsPlacingOrder(true);
@@ -225,9 +207,10 @@ function CheckoutContent({ userId }: { userId: string }) {
     if (step === 0) {
       stepContent = (
         <DeliveryStep
+          savedAddresses={savedAddresses}
           address={address}
-          errors={addressErrors}
-          onChangeAddress={handleChangeAddress}
+          errors={savedAddresses.errors}
+          onChangeAddress={savedAddresses.changeAddress}
           deliveryMethod={deliveryMethod}
           onChangeDeliveryMethod={setDeliveryMethod}
           subtotal={totals.subtotal}
@@ -258,6 +241,8 @@ function CheckoutContent({ userId }: { userId: string }) {
     }
 
     const isFinalStep = step === CHECKOUT_STEPS.length - 1;
+    const isBusy = isPlacingOrder || savedAddresses.isSaving;
+    const isDisabled = isBusy || (step === 0 && (savedAddresses.isLoading || !!savedAddresses.loadError));
 
     content = (
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -271,19 +256,20 @@ function CheckoutContent({ userId }: { userId: string }) {
           {stepContent}
 
           <Pressable
+            key={`checkout-cta-${step}`}
             onPress={onCta}
-            disabled={isPlacingOrder}
+            disabled={isDisabled}
             accessibilityRole="button"
             accessibilityLabel={ctaLabel}
-            accessibilityState={{ busy: isPlacingOrder, disabled: isPlacingOrder }}
+            accessibilityState={{ busy: isBusy, disabled: isDisabled }}
             style={({ pressed }) => [
               styles.cta,
               isFinalStep && styles.ctaFinal,
               pressed && styles.pressed,
-              isPlacingOrder && styles.ctaBusy,
+              isDisabled && styles.ctaBusy,
             ]}
           >
-            {isPlacingOrder ? (
+            {isBusy ? (
               <ActivityIndicator color={Colors.white} />
             ) : (
               <Text style={[styles.ctaLabel, isFinalStep && styles.ctaLabelFinal]}>{ctaLabel}</Text>
@@ -302,7 +288,7 @@ function CheckoutContent({ userId }: { userId: string }) {
       <StatusBar style="dark" />
       <View style={[styles.header, { paddingTop: insets.top + 4 }]}>
         <View style={styles.headerRow}>
-          <IconButton icon="←" accessibilityLabel={step > 0 ? 'Previous step' : 'Back to basket'} onPress={handleBack} disabled={isPlacingOrder} />
+          <IconButton icon="←" accessibilityLabel={step > 0 ? 'Previous step' : 'Back to basket'} onPress={handleBack} disabled={isPlacingOrder || savedAddresses.isSaving} />
           <Text style={styles.headerTitle} accessibilityRole="header">
             Checkout
           </Text>
