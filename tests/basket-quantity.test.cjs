@@ -312,6 +312,135 @@ test('quantity one can remove, stock cap disables plus, and loading blocks doubl
   assert.equal(pending.props.children[0].props.disabled, true);
 });
 
+test('adding one product does not load or disable other product controls', () => {
+  const context = {
+    quantities: { cream: 1 },
+    pendingProductIds: new Set(['cream']),
+    cartLoading: false,
+    cartError: false,
+  };
+  const props = {
+    productId: 'vitamins',
+    productName: 'Vitamins',
+    stockQuantity: 10,
+    active: true,
+    onAdd: async () => true,
+  };
+  const other = control(context)(props).props.children[0];
+  assert.equal(other.props.disabled, false);
+  assert.equal(other.props.children.type, 'Text');
+  assert.equal(other.props.children.props.children, 'Add to Cart');
+  const updating = control(context)({ ...props, productId: 'cream' });
+  assert.equal(
+    updating.props.children[0].props.children[0].props.disabled,
+    true,
+  );
+  assert.equal(
+    updating.props.children[0].props.children[1].props.children.type,
+    'ActivityIndicator',
+  );
+});
+
+test('successful quantity writes reconcile in background without global loading', async () => {
+  const slots = [];
+  let cursor = 0;
+  const effects = [];
+  let reads = 0;
+  let resolveReconcile;
+  const reconciliation = new Promise((resolve) => {
+    resolveReconcile = resolve;
+  });
+  let resolveLatest;
+  const latest = new Promise((resolve) => {
+    resolveLatest = resolve;
+  });
+  let failWrite = false;
+  const context = {};
+  const React = {
+    createContext: () => context,
+    useContext: () => context.value,
+    useState: (initial) => {
+      const index = cursor++;
+      if (!(index in slots)) slots[index] = initial;
+      return [
+        slots[index],
+        (value) => {
+          slots[index] = value;
+        },
+      ];
+    },
+    useRef: (initial) => {
+      const index = cursor++;
+      if (!(index in slots)) slots[index] = { current: initial };
+      return slots[index];
+    },
+    useCallback: (callback) => callback,
+    useMemo: (callback) => callback(),
+    useEffect: (callback) => {
+      effects.push(callback);
+    },
+  };
+  const api = load('src/context/CartCountContext.tsx', {
+    react: React,
+    'react/jsx-runtime': {
+      jsx: (type, props) => {
+        context.value = props.value;
+        return { type, props };
+      },
+    },
+    '@/context/SessionContext': {
+      useSession: () => ({ session: { user: { id: 'owner' } } }),
+    },
+    '@/services/cart': {
+      getCartQuantities: async () => {
+        reads++;
+        if (reads === 1) return {};
+        if (reads === 2) return reconciliation;
+        if (reads === 3) return latest;
+        throw new Error('Refresh failed');
+      },
+      setProductCartQuantity: async () => {
+        if (failWrite) throw new Error('Write failed');
+      },
+    },
+  });
+  const render = () => {
+    cursor = 0;
+    api.CartCountProvider({ children: null });
+  };
+  const flush = () => new Promise((resolve) => setImmediate(resolve));
+  render();
+  effects[0]();
+  await flush();
+  render();
+  assert.equal(context.value.cartLoading, false);
+  await context.value.addProduct('cream', 1);
+  render();
+  assert.equal(reads, 2);
+  assert.equal(context.value.cartLoading, false);
+  assert.equal(context.value.quantities.cream, 1);
+  // A second product remains usable while the first reconciliation is pending.
+  await context.value.addProduct('vitamins', 1);
+  render();
+  assert.equal(context.value.cartLoading, false);
+  resolveReconcile({ cream: 1 });
+  await flush();
+  render();
+  assert.equal(context.value.quantities.vitamins, 1);
+  resolveLatest({ cream: 1, vitamins: 1 });
+  await flush();
+  render();
+  assert.equal(context.value.cartCount, 2);
+  assert.equal(context.value.cartLoading, false);
+  failWrite = true;
+  await assert.rejects(context.value.addProduct('cream', 1), /Write failed/);
+  await flush();
+  render();
+  assert.equal(context.value.quantities.cream, 1);
+  assert.equal(context.value.cartError, true);
+  assert.equal(context.value.cartLoading, false);
+});
+
 test('failed basket loads show retry instead of pretending a product is not added', () => {
   const node = control({
     quantities: {},

@@ -228,5 +228,18 @@ to either:
   `supabase link`, which needs project credentials this environment doesn't have — see the
   comment at the top of each migration file).
 
+**Networks that block PostgreSQL ports** (e.g. the office network: TCP connects but the database
+never answers) can apply a migration over HTTPS instead. Create a personal access token at
+<https://supabase.com/dashboard/account/tokens>, then run:
+
+```sh
+SUPABASE_ACCESS_TOKEN=<token> npm run db:migrate -- supabase/migrations/<file>.sql
+```
+
+[apply-migration.mjs](../scripts/apply-migration.mjs) skips migrations already recorded in
+Supabase's migration history, records the new one, and reloads the API schema cache so the app sees
+it immediately. Pass the token only on the command line — `.env` is tracked in Git. Behind the
+corporate TLS proxy, also set `NODE_EXTRA_CA_CERTS` to the corporate CA bundle.
+
 `supabase/seed.sql` contains sample catalog data for a fresh database and is written to be safely
 re-run (every insert is guarded with `NOT EXISTS`, so re-running it never creates duplicates).

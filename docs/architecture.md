@@ -217,6 +217,9 @@ Decreasing from one removes that product; increasing respects stock and the 99-i
 Writes lock per product, update optimistically, and reconcile on failure. Failed loads expose
 Retry instead of pretending the basket is empty. Basket edits publish back into the same context,
 so returning to a product does not lose its added quantity. Home no longer shows time-of-day greetings.
+Post-write reconciliation runs in the background: only the product being saved shows a spinner,
+and other Add to Cart controls remain usable. Initial loads and explicit refresh/retry still block
+controls until the basket is known; stale background responses cannot overwrite newer mutations.
 
 [CartAnimationProvider](../src/context/CartAnimationContext.tsx) animates a product thumbnail in a
 jumping arc toward the active header cart (or the Cart tab on Wishlist) after a successful add
@@ -251,9 +254,12 @@ historical orders.
 
 **Database deployment required:** apply
 [20261009000000_saved_delivery_addresses.sql](../supabase/migrations/20261009000000_saved_delivery_addresses.sql)
-in the correct Supabase project's SQL Editor before using saved addresses. This migration has not
-been applied by the coding session. The app explicitly reports missing schema rather than
-presenting an empty-success address list. See [database.md](./database.md#saved-delivery-address-setup).
+in the correct Supabase project's SQL Editor before using saved addresses. A live API check found
+that the table and both RPCs are not currently exposed; certificate-verified PostgreSQL connections
+to the configured pooler timed out, so the migration was not applied or verified directly. Restore
+database connectivity, inspect the existing schema, then apply and verify the migration. The app
+explicitly reports missing schema rather than presenting an empty-success address list. See
+[database.md](./database.md#saved-delivery-address-setup).
 
 Run `node --test tests/*.test.cjs` for service/component regression checks. Browser checks use
 mocked addresses and baskets; actual Supabase migration/RLS and native-device validation remain

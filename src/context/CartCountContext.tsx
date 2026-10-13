@@ -57,26 +57,36 @@ export function CartCountProvider({ children }: PropsWithChildren) {
     );
   }, []);
 
-  const refreshCartCount = useCallback(async () => {
-    if (!userId || pending.current.size) return;
-    const id = ++version.current;
-    loadingRef.current = true;
-    setCartLoading(true);
-    try {
-      const next = await getCartQuantities(userId);
-      if (id === version.current) {
-        publish(next);
-        setCartError(false);
+  const fetchQuantities = useCallback(
+    async (blocking: boolean) => {
+      if (!userId || pending.current.size) return;
+      const id = ++version.current;
+      if (blocking) {
+        loadingRef.current = true;
+        setCartLoading(true);
       }
-    } catch {
-      if (id === version.current) setCartError(true);
-    } finally {
-      if (id === version.current) {
-        loadingRef.current = false;
-        setCartLoading(false);
+      try {
+        const next = await getCartQuantities(userId);
+        if (id === version.current) {
+          publish(next);
+          setCartError(false);
+        }
+      } catch {
+        if (id === version.current) setCartError(true);
+      } finally {
+        if (id === version.current) {
+          loadingRef.current = false;
+          setCartLoading(false);
+        }
       }
-    }
-  }, [userId, publish]);
+    },
+    [userId, publish],
+  );
+
+  const refreshCartCount = useCallback(
+    () => fetchQuantities(true),
+    [fetchQuantities],
+  );
 
   const changeProductQuantity = useCallback(
     async (productId: string, quantity: number) => {
@@ -102,11 +112,11 @@ export function CartCountProvider({ children }: PropsWithChildren) {
         if (accountEpoch === epoch.current) {
           pending.current.delete(productId);
           setPendingProductIds(new Set(pending.current));
-          if (!pending.current.size) void refreshCartCount();
+          if (!pending.current.size) void fetchQuantities(false);
         }
       }
     },
-    [userId, cartError, publish, refreshCartCount],
+    [userId, cartError, publish, fetchQuantities],
   );
 
   const addProduct = useCallback(
